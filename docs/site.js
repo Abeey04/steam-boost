@@ -1,4 +1,4 @@
-// steamboost.app (served from this folder by GitHub Pages): download links from the latest GitHub release, the right button for the
+// Steam Boost's website (this folder, served by GitHub Pages): download links from the latest GitHub release, the right button for the
 // visitor's computer, and the line map held still for people who'd rather no motion.
 
 const REPO = 'Abeey04/steam-boost'

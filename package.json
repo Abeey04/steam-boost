@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Download Steam games over every internet connection you have at once.",
   "main": "out/main/index.js",
-  "homepage": "https://steamboost.app",
+  "homepage": "https://abeey04.github.io/steam-boost",
   "repository": {
     "type": "git",
     "url": "https://github.com/Abeey04/steam-boost.git"

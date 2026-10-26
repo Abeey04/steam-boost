@@ -6,7 +6,7 @@
 
 <p align="center">
   Steam downloads over every internet connection you have at once.<br />
-  <a href="https://steamboost.app">steamboost.app</a> ·
+  <a href="https://abeey04.github.io/steam-boost/">Website</a> ·
   <a href="https://github.com/Abeey04/steam-boost/releases/latest">Download</a>
 </p>
 
@@ -130,17 +130,23 @@ to be told the app is fine (right-click › Open).
 
 ## The website
 
-`docs/` is steamboost.app: plain HTML and CSS with the download links filled in from the latest
-release. To publish it:
+`docs/` is the website: plain HTML and CSS, with the download links filled in from the latest
+release. GitHub Pages serves it at https://abeey04.github.io/steam-boost/ with the repository's Settings › Pages set to
+**Deploy from a branch**, branch `main`, folder `/docs`.
 
-1. In the repository's Settings › Pages, choose **Deploy from a branch**, branch `main`, folder
-   `/docs`.
-2. At your domain registrar, point `steamboost.app` at GitHub Pages: A records `185.199.108.153`,
-   `185.199.109.153`, `185.199.110.153`, `185.199.111.153`, and AAAA records `2606:50c0:8000::153`,
-   `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153`. For `www`, a CNAME to
-   `abeey04.github.io`.
-3. Back in Settings › Pages, enter `steamboost.app` as the custom domain (`docs/CNAME` already
-   says so), wait for the check, then tick **Enforce HTTPS**.
+### A custom domain, later
+
+To move the site to steamboost.app once that domain is registered to you:
+
+1. At the registrar, give the bare domain A records `185.199.108.153`, `185.199.109.153`,
+   `185.199.110.153` and `185.199.111.153`, and AAAA records `2606:50c0:8000::153`,
+   `2606:50c0:8001::153`, `2606:50c0:8002::153` and `2606:50c0:8003::153`. Give `www` a CNAME to
+   `abeey04.github.io`. Delete the registrar's own parking records, and on Cloudflare make every
+   record DNS only.
+2. In Settings › Pages, enter `steamboost.app` as the custom domain. Once the DNS check passes,
+   tick **Enforce HTTPS**. GitHub adds `docs/CNAME` in a commit of its own: pull it.
+3. Point the project at the new address: `site` in `src/shared/project.ts`, `homepage` in
+   `package.json`, and the canonical and `og:` addresses at the top of `docs/index.html`.
 
 See GitHub's guide to [managing a custom domain](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site).
 
