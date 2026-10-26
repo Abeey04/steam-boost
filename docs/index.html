@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Steam Boost: Steam downloads over every connection you have</title>
+    <meta
+      name="description"
+      content="Steam Boost splits Steam's game downloads across your Wi-Fi, Ethernet and phone, so a game arrives at their combined speed. Free and open source."
+    />
+    <link rel="canonical" href="https://steamboost.app/" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://steamboost.app/" />
+    <meta property="og:title" content="Steam Boost" />
+    <meta
+      property="og:description"
+      content="Steam downloads over your Wi-Fi, Ethernet and phone at once. Free and open source."
+    />
+    <meta property="og:image" content="https://steamboost.app/assets/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#f8f9fb" />
+    <link rel="preload" href="fonts/overpass.woff" as="font" type="font/woff" crossorigin />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="site.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="nav">
+      <a class="brand" href="#top" aria-label="Steam Boost, back to the top">
+        <img src="favicon.svg" width="30" height="30" alt="" />
+        <span>Steam Boost</span>
+      </a>
+      <nav aria-label="Sections">
+        <a href="#how">How it works</a>
+        <a href="#download">Download</a>
+        <a href="#questions">Questions</a>
+        <a href="https://github.com/Abeey04/steam-boost">GitHub</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top">
+        <div class="hero-text">
+          <h1>Every connection you have, on one Steam download.</h1>
+          <p class="lede">
+            Steam Boost splits Steam's downloads across your Wi-Fi, Ethernet and phone, piece by
+            piece, so a game arrives at their combined speed.
+          </p>
+          <div class="actions">
+            <a
+              class="button"
+              id="primary-download"
+              href="https://github.com/Abeey04/steam-boost/releases/latest"
+            >
+              Download for Windows
+            </a>
+            <a class="quiet-link" href="#download">Other platforms</a>
+          </div>
+          <p class="release-note" id="release-note">
+            Free and open source. This is a pre-release for Windows 10 and 11; macOS and Linux
+            builds are experimental.
+          </p>
+        </div>
+
+        <figure class="map" aria-labelledby="map-caption">
+          <svg id="line-map" viewBox="0 0 640 420" role="img" aria-labelledby="map-title map-desc">
+            <title id="map-title">Three connections joining into one download</title>
+            <desc id="map-desc">
+              Wi-Fi at 6 megabytes a second, a phone at 2.5 and Ethernet at 1.9 carry pieces of one
+              Steam download, which arrives at 10.4 megabytes a second.
+            </desc>
+            <defs>
+              <path id="line-wifi" d="M70 92 H230 C300 92 300 210 372 210 H566" />
+              <path id="line-phone" d="M70 210 H566" />
+              <path id="line-eth" d="M70 328 H230 C300 328 300 210 372 210 H566" />
+            </defs>
+
+            <g class="lines" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <use href="#line-wifi" class="line wifi" />
+              <use href="#line-eth" class="line eth" />
+              <use href="#line-phone" class="line phone" />
+              <path class="line merged" d="M372 210 H566" />
+            </g>
+
+            <!-- Pieces of the game, each on the connection carrying it. -->
+            <g class="pieces">
+              <rect class="piece wifi" x="-13" y="-7" width="26" height="14" rx="7">
+                <animateMotion dur="3.2s" repeatCount="indefinite" begin="0s">
+                  <mpath href="#line-wifi" />
+                </animateMotion>
+              </rect>
+              <rect class="piece wifi" x="-13" y="-7" width="26" height="14" rx="7">
+                <animateMotion dur="3.2s" repeatCount="indefinite" begin="-1.1s">
+                  <mpath href="#line-wifi" />
+                </animateMotion>
+              </rect>
+              <rect class="piece wifi" x="-13" y="-7" width="26" height="14" rx="7">
+                <animateMotion dur="3.2s" repeatCount="indefinite" begin="-2.2s">
+                  <mpath href="#line-wifi" />
+                </animateMotion>
+              </rect>
+              <rect class="piece phone" x="-13" y="-7" width="26" height="14" rx="7">
+                <animateMotion dur="4.4s" repeatCount="indefinite" begin="-0.6s">
+                  <mpath href="#line-phone" />
+                </animateMotion>
+              </rect>
+              <rect class="piece phone" x="-13" y="-7" width="26" height="14" rx="7">
+                <animateMotion dur="4.4s" repeatCount="indefinite" begin="-2.8s">
+                  <mpath href="#line-phone" />
+                </animateMotion>
+              </rect>
+              <rect class="piece eth" x="-13" y="-7" width="26" height="14" rx="7">
+                <animateMotion dur="5.2s" repeatCount="indefinite" begin="-1.7s">
+                  <mpath href="#line-eth" />
+                </animateMotion>
+              </rect>
+              <rect class="piece eth" x="-13" y="-7" width="26" height="14" rx="7">
+                <animateMotion dur="5.2s" repeatCount="indefinite" begin="-4.3s">
+                  <mpath href="#line-eth" />
+                </animateMotion>
+              </rect>
+            </g>
+
+            <g class="stations">
+              <circle class="station wifi" cx="70" cy="92" r="11" />
+              <circle class="station phone" cx="70" cy="210" r="11" />
+              <circle class="station eth" cx="70" cy="328" r="11" />
+              <rect class="terminus" x="560" y="178" width="22" height="64" rx="11" />
+            </g>
+
+            <g class="labels">
+              <text x="56" y="62" class="label">Wi-Fi</text>
+              <text x="56" y="130" class="speed">6.0 MB/s</text>
+              <text x="56" y="180" class="label">Phone over USB</text>
+              <text x="56" y="248" class="speed">2.5 MB/s</text>
+              <text x="56" y="298" class="label">Ethernet</text>
+              <text x="56" y="366" class="speed">1.9 MB/s</text>
+              <text x="571" y="160" class="label end">Steam</text>
+              <text x="571" y="274" class="speed total end">10.4 MB/s</text>
+            </g>
+          </svg>
+          <figcaption id="map-caption">
+            Each piece of a game goes to whichever connection will finish it soonest.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section class="how" id="how" aria-labelledby="how-title">
+        <h2 id="how-title">How it works</h2>
+        <ol class="route">
+          <li>
+            <h3>Steam looks for a cache</h3>
+            <p>
+              Steam can download through a cache on your local network, a feature built for LAN
+              parties. Steam Boost adds one line to your hosts file, so the cache Steam finds is
+              Steam Boost, on your own PC.
+            </p>
+          </li>
+          <li>
+            <h3>Steam Boost splits the work</h3>
+            <p>
+              Steam asks for a game in pieces of about a megabyte. Each piece goes to the connection
+              that will finish it soonest, so a slower phone still carries its share without holding
+              up the rest.
+            </p>
+          </li>
+          <li>
+            <h3>Steam checks every piece</h3>
+            <p>
+              Pieces arrive encrypted, and Steam checks each one against its checksum, so nothing
+              Steam Boost does can change a game. If Steam Boost stops, Steam goes back to its own
+              servers.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="needs" aria-labelledby="needs-title">
+        <div>
+          <h2 id="needs-title">What you need</h2>
+          <p>
+            Two connections, each with its own internet. Your home Wi-Fi plus your phone's mobile
+            data over a USB cable is the usual pair. Wi-Fi and Ethernet to the same router share one
+            line, so together they add nothing.
+          </p>
+          <p>
+            A Windows 10 or 11 PC with Steam installed, and administrator permission once, for the
+            hosts-file line.
+          </p>
+        </div>
+        <div class="phone-data">
+          <h2>A daily cap for your phone's data</h2>
+          <p>
+            Give the phone a daily cap. Steam Boost stops using it once the day's cap is reached,
+            carries on over your other connections, and starts counting again at midnight.
+          </p>
+          <div class="cap-sample" aria-hidden="true">
+            <div class="cap-row">
+              <span class="cap-name">Phone over USB</span>
+              <span class="cap-used">1.4 GB of 2 GB today</span>
+            </div>
+            <div class="cap-meter"><span style="width: 70%"></span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="download" id="download" aria-labelledby="download-title">
+        <h2 id="download-title">Download</h2>
+        <p class="download-version" id="download-version">
+          The latest release is on GitHub, with notes on what changed.
+        </p>
+        <ul class="platforms">
+          <li>
+            <div>
+              <h3>Windows 10 and 11</h3>
+              <p>One installer for x64 and Arm PCs.</p>
+            </div>
+            <a
+              class="button small"
+              data-asset="windows"
+              href="https://github.com/Abeey04/steam-boost/releases/latest"
+              >Download installer</a
+            >
+          </li>
+          <li>
+            <div>
+              <h3>macOS <span class="tag">Experimental</span></h3>
+              <p>Apple silicon and Intel Macs.</p>
+            </div>
+            <div class="links">
+              <a
+                data-asset="mac-arm64"
+                href="https://github.com/Abeey04/steam-boost/releases/latest"
+                >Apple silicon</a
+              >
+              <a data-asset="mac-x64" href="https://github.com/Abeey04/steam-boost/releases/latest"
+                >Intel</a
+              >
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Linux <span class="tag">Experimental</span></h3>
+              <p>Steam on Linux and the Steam Deck uses caches unreliably.</p>
+            </div>
+            <div class="links">
+              <a data-asset="appimage" href="https://github.com/Abeey04/steam-boost/releases/latest"
+                >AppImage</a
+              >
+              <a data-asset="deb" href="https://github.com/Abeey04/steam-boost/releases/latest"
+                >.deb</a
+              >
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Command line</h3>
+              <p>The same engine without the app, for Node.js 20 or newer.</p>
+            </div>
+            <a data-asset="cli" href="https://github.com/Abeey04/steam-boost/releases/latest"
+              >steam-boost-cli.mjs</a
+            >
+          </li>
+        </ul>
+        <p class="smartscreen">
+          Windows may say it protected your PC, because the app isn't code-signed yet. Choose More
+          info, then Run anyway. The source is on GitHub if you'd rather build it yourself.
+        </p>
+      </section>
+
+      <section class="questions" id="questions" aria-labelledby="questions-title">
+        <h2 id="questions-title">Questions</h2>
+        <details>
+          <summary>Is this allowed by Steam?</summary>
+          <p>
+            Steam Boost uses Steam's built-in support for LAN caches, the feature LAN parties and
+            tools like LANCache rely on. It doesn't change Steam, your games, your account or
+            anti-cheat; it only changes which of your connections each piece of a download comes
+            over. Steam Boost isn't made or endorsed by Valve.
+          </p>
+        </details>
+        <details>
+          <summary>Will it use up my mobile data?</summary>
+          <p>
+            It uses as much as your phone can carry, and a game can be 50 GB or more. Set a daily
+            cap on the phone's connection in the app, a little below what your plan allows: the plan
+            counts some overhead that Steam Boost can't see.
+          </p>
+        </details>
+        <details>
+          <summary>Why does it ask for administrator permission?</summary>
+          <p>
+            To add one line to your hosts file that points Steam's cache name
+            (lancache.steamcontent.com) at your PC. Nothing else needs it, and Undo setup takes the
+            line out again.
+          </p>
+        </details>
+        <details>
+          <summary>My download didn't get faster.</summary>
+          <p>
+            Check that both connections show a speed in the app. If Steam Boost says Steam hasn't
+            asked it for anything, exit Steam from its menu (Steam, then Exit) and open it again:
+            Steam only looks for a cache when it starts. Steam's own bandwidth limit (Settings, then
+            Downloads) still applies, and a slow disk can be the limit while Steam installs.
+          </p>
+        </details>
+        <details>
+          <summary>How do I undo it?</summary>
+          <p>
+            Click Undo setup in the app's settings and restart Steam. Do that before you uninstall,
+            so the hosts-file line goes too.
+          </p>
+        </details>
+        <details>
+          <summary>Does it work with a second Wi-Fi, or a hotspot?</summary>
+          <p>
+            Any two adapters that each reach the internet another way will do: a USB Wi-Fi adapter
+            on a phone's hotspot alongside your built-in Wi-Fi on home broadband, say. One Wi-Fi
+            adapter can only join one network at a time.
+          </p>
+        </details>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>
+        Steam Boost is free software under the MIT License, built on networking code from
+        <a href="https://github.com/anmolkapil/plexo">Plexo</a> by Anmol Kapil. It isn't affiliated
+        with Valve Corporation. Steam is a trademark of Valve Corporation.
+      </p>
+      <p class="footer-links">
+        <a href="https://github.com/Abeey04/steam-boost">Source on GitHub</a>
+        <a href="https://github.com/Abeey04/steam-boost/releases">Releases</a>
+        <a href="https://github.com/Abeey04/steam-boost/issues">Report a problem</a>
+      </p>
+    </footer>
+  </body>
+</html>

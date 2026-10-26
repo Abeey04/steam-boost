@@ -1,0 +1,91 @@
+name: Release
+
+# Pushing a version tag builds every OS and leaves a draft GitHub Release with the installers:
+#
+#   npm version 0.2.0 --no-git-tag-version   (or edit "version" in package.json)
+#   git commit -am "Steam Boost 0.2.0" && git tag v0.2.0 && git push origin main v0.2.0
+#
+# Nothing is public until the draft is published from the repository's Releases page. Run by
+# hand (Actions > Release > Run workflow) it's a dry run: the same builds, kept as artifacts, and
+# no release.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: --win
+          - os: macos-latest
+            target: --mac
+          - os: ubuntu-latest
+            target: --linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # The tag names the version the build gets; a mismatch would ship one version as another.
+      - name: Check the tag matches package.json
+        if: github.event_name == 'push'
+        shell: bash
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+
+      - name: Install dependencies
+        run: npm install
+
+      # Unsigned for now: Windows shows a SmartScreen warning on first run, and macOS asks to be
+      # told it's fine (right-click > Open). Signing certificates can be added here later.
+      - name: Build
+        shell: bash
+        run: |
+          npm run build
+          npx electron-builder ${{ matrix.target }} --publish never
+
+      - name: Build the command-line tool
+        if: runner.os == 'Linux'
+        run: npm run build:cli && cp out/cli/steam-boost-cli.mjs dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ runner.os }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.mjs
+          if-no-files-found: error
+
+  release:
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft \
+            --title "Steam Boost ${TAG#v}" \
+            --generate-notes

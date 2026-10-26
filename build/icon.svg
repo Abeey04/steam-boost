@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Steam Boost: three connections braided into one download arrow. The app, tray and website
+       icons are rendered from this file. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c232d"/>
+      <stop offset="1" stop-color="#0b0e12"/>
+    </linearGradient>
+    <linearGradient id="arrow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6ff5ae"/>
+      <stop offset="1" stop-color="#1fbf6a"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M140 104C140 190 256 176 256 262" stroke="#4cc2ff" stroke-width="34"/>
+    <path d="M372 104C372 190 256 176 256 262" stroke="#c58bff" stroke-width="34"/>
+    <path d="M256 96V262" stroke="#ffa94d" stroke-width="34"/>
+    <path d="M256 250V392M176 312L256 392L336 312" stroke="url(#arrow)" stroke-width="46"/>
+  </g>
+</svg>

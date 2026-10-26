@@ -1,0 +1,48 @@
+{
+  "name": "steam-boost",
+  "productName": "Steam Boost",
+  "version": "0.1.0",
+  "description": "Download Steam games over every internet connection you have at once.",
+  "main": "out/main/index.js",
+  "homepage": "https://steamboost.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Abeey04/steam-boost.git"
+  },
+  "bugs": "https://github.com/Abeey04/steam-boost/issues",
+  "author": "Arpeet Chandane (https://github.com/Abeey04)",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "start": "node scripts/build.mjs && electron .",
+    "test": "node scripts/build.mjs --test",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "build:cli": "node scripts/build.mjs --cli",
+    "dist": "node scripts/build.mjs && electron-builder --publish never",
+    "dist:win": "node scripts/build.mjs && electron-builder --win --publish never",
+    "dist:mac": "node scripts/build.mjs && electron-builder --mac --publish never",
+    "dist:linux": "node scripts/build.mjs && electron-builder --linux --publish never"
+  },
+  "dependencies": {
+    "koffi": "^2.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "electron": "^44.4.4",
+    "electron-builder": "^26.16.1",
+    "esbuild": "^0.25.12",
+    "prettier": "^3.7.4",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "typescript": "^5.9.3"
+  }
+}

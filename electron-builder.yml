@@ -1,0 +1,57 @@
+appId: app.steamboost.desktop
+productName: Steam Boost
+copyright: Copyright © 2026 Arpeet Chandane. Includes code from Plexo, © 2026 Anmol Kapil (MIT).
+directories:
+  buildResources: build
+  output: dist
+# Everything (the default) less what only building needs: the app is out/main, out/preload and
+# out/renderer, package.json, and its production node_modules.
+files:
+  - '!{src,test,scripts,docs,build,resources,.github}/**'
+  - '!out/{test,cli}/**'
+  - '!{.editorconfig,.gitattributes,.prettierrc.yaml,.prettierignore,CHANGELOG.md,README.md,electron-builder.yml}'
+  - '!tsconfig*.json'
+  # koffi ships prebuilds for every OS, and is only loaded on Linux (network/deviceBinding.ts).
+  - '!node_modules/koffi/{src,vendor,doc}/**'
+  - '!node_modules/koffi/build/koffi/!(linux_x64|linux_arm64)/**'
+win:
+  executableName: steam-boost
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+nsis:
+  # No ${arch}: one installer holds both, and docs/site.js reads a name without one as that.
+  artifactName: ${name}-${version}-setup.${ext}
+  # Assisted rather than one-click, so people can choose where it goes.
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName}
+  createDesktopShortcut: always
+mac:
+  category: public.app-category.utilities
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+dmg:
+  artifactName: ${name}-${version}-${arch}.${ext}
+linux:
+  target:
+    - target: AppImage
+      arch: [x64]
+    - target: deb
+      arch: [x64]
+  category: Network
+  maintainer: Arpeet Chandane <https://github.com/Abeey04>
+  artifactName: ${name}-${version}-${arch}.${ext}
+appImage:
+  artifactName: ${name}-${version}-${arch}.${ext}
+deb:
+  artifactName: ${name}_${version}_${arch}.${ext}
+npmRebuild: false
+# Builds never publish themselves (--publish never): .github/workflows/release.yml uploads them to a
+# draft GitHub Release.
+publish:
+  provider: github
+  owner: Abeey04
+  repo: steam-boost

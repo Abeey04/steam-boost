@@ -1,0 +1,620 @@
+/* steamboost.app: a line map. Each connection is a coloured line, as in the app's icon; they
+   meet in one green line to Steam. Everything else stays quiet around that. */
+
+@font-face {
+  font-family: 'Overpass';
+  src: url('fonts/overpass.woff') format('woff');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --paper: #f8f9fb;
+  --surface: #ffffff;
+  --ink: #1a2230;
+  --ink-2: #4f5a69;
+  --rule: #dfe3ea;
+  --wifi: #1d9be0;
+  --phone: #ee8a12;
+  --eth: #8a57e8;
+  --merge: #10a35b;
+  --merge-ink: #0a7542;
+  --focus: #1d6fe0;
+  --measure: 66ch;
+  --gutter: clamp(16px, 4vw, 40px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font:
+    400 18px/1.6 'Overpass',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  font-feature-settings: 'kern', 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--merge-ink);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 760;
+  letter-spacing: -0.015em;
+}
+
+h2 {
+  font-size: clamp(26px, 3.2vw, 34px);
+  line-height: 1.15;
+}
+
+h3 {
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+p {
+  margin: 0;
+}
+
+.skip {
+  position: absolute;
+  left: -999px;
+  top: 8px;
+  padding: 8px 12px;
+  background: var(--surface);
+}
+
+.skip:focus {
+  left: 8px;
+}
+
+/* Navigation */
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 18px var(--gutter);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 19px;
+  font-weight: 760;
+  text-decoration: none;
+}
+
+.nav nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+}
+
+.nav nav a {
+  color: var(--ink-2);
+  font-size: 16px;
+  font-weight: 560;
+  text-decoration: none;
+}
+
+.nav nav a:hover {
+  color: var(--ink);
+}
+
+main {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* Hero: the words on the left, the line map on the right */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+  padding: clamp(24px, 6vw, 72px) 0 clamp(40px, 7vw, 88px);
+}
+
+@media (min-width: 940px) {
+  .hero {
+    grid-template-columns: minmax(0, 11fr) minmax(0, 13fr);
+    gap: 48px;
+  }
+}
+
+h1 {
+  max-width: 16ch;
+  font-size: clamp(40px, 4.7vw, 58px);
+  text-wrap: balance;
+  font-weight: 820;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+
+.lede {
+  max-width: 34ch;
+  margin-top: 22px;
+  color: var(--ink-2);
+  font-size: clamp(19px, 2vw, 21px);
+  line-height: 1.55;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 22px;
+  margin-top: 30px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: 999px;
+  background: var(--merge-ink);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 0 0 0 var(--merge);
+  transition: background 0.15s ease;
+}
+
+.button:hover {
+  background: #075e35;
+}
+
+.button.small {
+  min-height: 44px;
+  padding: 0 20px;
+  font-size: 16px;
+}
+
+.quiet-link {
+  font-weight: 650;
+}
+
+.release-note {
+  max-width: 40ch;
+  margin-top: 20px;
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* The line map */
+
+.map {
+  margin: 0;
+}
+
+.map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.map figcaption {
+  margin-top: 6px;
+  color: var(--ink-2);
+  font-size: 15px;
+  text-align: right;
+}
+
+.line {
+  stroke-width: 10;
+}
+
+.line.wifi {
+  stroke: var(--wifi);
+}
+
+.line.phone {
+  stroke: var(--phone);
+}
+
+.line.eth {
+  stroke: var(--eth);
+}
+
+.line.merged {
+  stroke: var(--merge);
+  stroke-width: 18;
+}
+
+.station {
+  fill: var(--surface);
+  stroke-width: 6;
+}
+
+.station.wifi {
+  stroke: var(--wifi);
+}
+
+.station.phone {
+  stroke: var(--phone);
+}
+
+.station.eth {
+  stroke: var(--eth);
+}
+
+.terminus {
+  fill: var(--surface);
+  stroke: var(--merge-ink);
+  stroke-width: 6;
+}
+
+.piece {
+  fill: var(--surface);
+  stroke-width: 3.5;
+}
+
+.piece.wifi {
+  stroke: var(--wifi);
+}
+
+.piece.phone {
+  stroke: var(--phone);
+}
+
+.piece.eth {
+  stroke: var(--eth);
+}
+
+.map text {
+  fill: var(--ink);
+  font-family: 'Overpass', system-ui, sans-serif;
+}
+
+.map .label {
+  font-size: 19px;
+  font-weight: 760;
+}
+
+.map .speed {
+  fill: var(--ink-2);
+  font-size: 16px;
+  font-weight: 560;
+  font-variant-numeric: tabular-nums;
+}
+
+.map .total {
+  fill: var(--merge-ink);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.map .end {
+  text-anchor: middle;
+}
+
+/* How it works: the same line, run downwards, a stop for each step */
+
+.how {
+  padding: clamp(40px, 6vw, 72px) 0;
+  border-top: 1px solid var(--rule);
+}
+
+.route {
+  position: relative;
+  max-width: var(--measure);
+  margin: 32px 0 0;
+  padding: 0 0 0 52px;
+  list-style: none;
+  counter-reset: stop;
+}
+
+.route::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 13px;
+  width: 8px;
+  border-radius: 4px;
+  background: var(--merge);
+}
+
+.route li {
+  position: relative;
+  counter-increment: stop;
+}
+
+.route li + li {
+  margin-top: 36px;
+}
+
+.route li::before {
+  content: counter(stop);
+  position: absolute;
+  top: 0;
+  left: -52px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 6px solid var(--merge-ink);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--merge-ink);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.route h3 {
+  line-height: 34px;
+}
+
+.route p {
+  margin-top: 6px;
+  color: var(--ink-2);
+}
+
+/* What you need, and the daily cap */
+
+.needs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 40px;
+  padding: clamp(40px, 6vw, 72px) 0;
+  border-top: 1px solid var(--rule);
+}
+
+@media (min-width: 900px) {
+  .needs {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 64px;
+  }
+}
+
+.needs p {
+  max-width: var(--measure);
+  margin-top: 14px;
+  color: var(--ink-2);
+}
+
+.cap-sample {
+  max-width: 420px;
+  margin-top: 24px;
+  padding: 16px 18px;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.cap-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  font-size: 16px;
+}
+
+.cap-name {
+  font-weight: 700;
+}
+
+.cap-used {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.cap-meter {
+  height: 8px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #eceff3;
+}
+
+.cap-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--phone);
+}
+
+/* Download */
+
+.download {
+  padding: clamp(40px, 6vw, 72px) 0;
+  border-top: 1px solid var(--rule);
+}
+
+.download-version {
+  margin-top: 12px;
+  color: var(--ink-2);
+}
+
+.platforms {
+  max-width: 860px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.platforms li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding: 20px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.platforms li:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+
+.platforms p {
+  margin-top: 2px;
+  color: var(--ink-2);
+  font-size: 16px;
+}
+
+.platforms .links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.platforms a:not(.button) {
+  font-weight: 650;
+}
+
+.tag {
+  margin-left: 6px;
+  padding: 2px 8px 1px;
+  border-radius: 999px;
+  background: #fff4e5;
+  color: #9a5200;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  vertical-align: 3px;
+}
+
+.smartscreen {
+  max-width: var(--measure);
+  margin-top: 22px;
+  color: var(--ink-2);
+  font-size: 16px;
+}
+
+/* Questions */
+
+.questions {
+  padding: clamp(40px, 6vw, 72px) 0;
+  border-top: 1px solid var(--rule);
+}
+
+.questions h2 {
+  margin-bottom: 18px;
+}
+
+.questions details {
+  max-width: 760px;
+  border-top: 1px solid var(--rule);
+}
+
+.questions details:last-of-type {
+  border-bottom: 1px solid var(--rule);
+}
+
+.questions summary {
+  position: relative;
+  padding: 18px 40px 18px 0;
+  font-size: 19px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.questions summary::-webkit-details-marker {
+  display: none;
+}
+
+.questions summary::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 10px;
+  height: 10px;
+  margin-top: -7px;
+  border-right: 2.5px solid var(--ink-2);
+  border-bottom: 2.5px solid var(--ink-2);
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.questions details[open] summary::after {
+  margin-top: -2px;
+  transform: rotate(-135deg);
+}
+
+.questions details p {
+  max-width: var(--measure);
+  padding: 0 0 20px;
+  color: var(--ink-2);
+}
+
+/* Footer */
+
+.footer {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 32px var(--gutter) 48px;
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+.footer p {
+  max-width: 72ch;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  margin-top: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .questions summary::after {
+    transition: none;
+  }
+}
