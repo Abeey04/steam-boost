@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1
+
+- Screen readers announce only where things stand, the status line at the top of the window,
+  rather than reading out the speed and the chart every second.
+- The window's text is easier to read: the fine print, the green buttons, the update notice's link
+  and the amber and red text all meet WCAG AA contrast now, in both themes.
+
 ## 0.1.0
 
 The first release: a pre-release for Windows 10 and 11, with experimental macOS and Linux builds.
