@@ -19,10 +19,10 @@ game arrives at their combined speed. Home broadband plus your phone's mobile da
 cable is the usual pair. It's free and open source (MIT), and it doesn't touch Steam, your games
 or your account.
 
-> **Pre-release.** Steam Boost has been tested end to end against a simulated Steam (a mock
-> content server and a client that downloads the way Steam does through a cache), not yet against
-> the real Steam client on Windows. If you try it, a note in the issues saying how it went,
-> working or not, is the most useful thing you can send.
+> **Pre-release.** Steam Boost is tested end to end against a simulated Steam (a mock content
+> server and a client that downloads the way Steam does through a cache), and it has worked with
+> the real Steam client on Windows. It's still early: if you try it, a note in the issues saying
+> how it went, working or not, is the most useful thing you can send.
 
 ## How it works
 
