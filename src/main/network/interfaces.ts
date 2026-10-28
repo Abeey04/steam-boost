@@ -180,6 +180,7 @@ export async function listActiveInterfaces(): Promise<NetworkInterfaceInfo[]> {
       // What the OS shows people: macOS's hardware port ("Wi-Fi", "iPhone USB"), else the device —
       // on Windows its alias ("Wi-Fi", "Ethernet 2"), on Linux its name (wlp2s0).
       displayName: hardwareName ?? device,
+      description: adapter?.InterfaceDescription ?? hardwareName,
       addresses: usable,
       kind,
       mac: addresses.find((addr) => addr.mac && addr.mac !== '00:00:00:00:00:00')?.mac

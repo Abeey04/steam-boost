@@ -17,6 +17,8 @@ const MAX_NETWORKS = 64
 const MAX_ID_LENGTH = 256
 /** A petabyte a day: anything above is a typo, not a cap. */
 const MAX_CAP_BYTES = 1024 ** 5
+/** Characters in a name given to a network: enough for "Mum's phone hotspot", short enough to fit. */
+const MAX_NAME_LENGTH = 40
 
 function record(value: unknown): Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -30,6 +32,15 @@ export function sanitizeCap(value: unknown): number | undefined {
     : undefined
 }
 
+/** A name for a network, on one line and trimmed; undefined when nothing is left of it. */
+export function sanitizeName(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const oneLine = value.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ')
+  // By character, not UTF-16 unit, so an emoji at the end isn't cut in half.
+  const name = [...oneLine.trim()].slice(0, MAX_NAME_LENGTH).join('').trim()
+  return name || undefined
+}
+
 function sanitizeNetworks(value: unknown): Record<string, NetworkSettings> {
   const networks: Record<string, NetworkSettings> = {}
   for (const [id, raw] of Object.entries(record(value)).slice(0, MAX_NETWORKS)) {
@@ -39,6 +50,8 @@ function sanitizeNetworks(value: unknown): Record<string, NetworkSettings> {
     if (input['enabled'] === false) entry.enabled = false
     const cap = sanitizeCap(input['dailyCapBytes'])
     if (cap !== undefined) entry.dailyCapBytes = cap
+    const name = sanitizeName(input['name'])
+    if (name !== undefined) entry.name = name
     // Only what differs from the defaults is kept.
     if (Object.keys(entry).length > 0) networks[id] = entry
   }
@@ -71,6 +84,8 @@ export function withNetwork(settings: AppSettings, id: string, patch: NetworkPat
   if (typeof patch.enabled === 'boolean') current['enabled'] = patch.enabled
   if (patch.dailyCapBytes === null) delete current['dailyCapBytes']
   else if (patch.dailyCapBytes !== undefined) current['dailyCapBytes'] = patch.dailyCapBytes
+  if (patch.name === null) delete current['name']
+  else if (patch.name !== undefined) current['name'] = patch.name
   return sanitizeSettings({ ...settings, networks: { ...settings.networks, [id]: current } })
 }
 

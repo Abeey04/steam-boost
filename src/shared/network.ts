@@ -17,6 +17,9 @@ export interface NetworkInterfaceInfo {
   device: string
   /** What the OS shows people: the alias on Windows, the hardware port on macOS ("iPhone USB"). */
   displayName: string
+  /** What the adapter is, where the OS says: Windows' description ("Remote NDIS based Internet
+   * Sharing Device"), macOS's hardware port. Linux has none. */
+  description?: string
   addresses: NetworkAddress[]
   kind: NetworkInterfaceKind
   mac?: string

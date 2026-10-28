@@ -12,9 +12,21 @@ import { Hero } from './components/Hero'
 import { NetworkList } from './components/NetworkList'
 import { SettingsPanel } from './components/SettingsPanel'
 import { SetupCard } from './components/SetupCard'
+import { SetupGuide } from './components/SetupGuide'
 import { Switch } from './components/Switch'
-import { SPEED_UNITS, type SpeedUnit } from './format'
+import { phaseOf, SPEED_UNITS, type Phase, type SpeedUnit } from './format'
 import { CloseIcon, ExternalIcon, Logo } from './icons'
+import type { AppState } from './types'
+
+const SETTING_UP = new Set<Phase>(['starting', 'error', 'elsewhere', 'setup', 'restart'])
+
+/** Until Steam has used Steam Boost, the window opens on what to do next (SetupGuide) rather than
+ * on a speed with nothing to show. Starting counts only before setup: the engine starts again
+ * whenever the boost is switched back on. */
+function settingUp(state: AppState): boolean {
+  const { phase } = phaseOf(state)
+  return phase === 'starting' ? state.boost.hostsEntry !== 'set' : SETTING_UP.has(phase)
+}
 
 function ExternalLink({
   href,
@@ -110,15 +122,21 @@ export function App(): React.JSX.Element {
       )}
 
       <main>
-        <Hero
-          state={state}
-          samples={samples}
-          colorOf={colorOf}
-          rankOf={rankOf}
-          unit={unit}
-          onUnit={setUnit}
-        />
-        <SetupCard state={state} onError={showError} />
+        {settingUp(state) ? (
+          <SetupGuide state={state} colorOf={colorOf} onError={showError} />
+        ) : (
+          <>
+            <Hero
+              state={state}
+              samples={samples}
+              colorOf={colorOf}
+              rankOf={rankOf}
+              unit={unit}
+              onUnit={setUnit}
+            />
+            <SetupCard state={state} />
+          </>
+        )}
         <NetworkList
           networks={state.networks}
           running={state.settings.enabled && state.boost.state === 'on'}

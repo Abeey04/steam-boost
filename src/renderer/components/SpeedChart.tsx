@@ -44,10 +44,12 @@ export function SpeedChart({
     const upper = above.map((value, index) => `${x(index).toFixed(1)},${y(value).toFixed(1)}`)
     const lower = below.map((value, index) => `${x(index).toFixed(1)},${y(value).toFixed(1)}`)
     below = above
+    // A network that carried nothing all minute draws nothing, not a line along the bottom.
+    const drawn = upper.length > 1 && recent.some((sample) => (sample.speeds[id] ?? 0) > 0)
     return {
       id,
-      area: upper.length > 1 ? `M${upper.join('L')}L${lower.reverse().join('L')}Z` : '',
-      line: upper.length > 1 ? `M${upper.join('L')}` : ''
+      area: drawn ? `M${upper.join('L')}L${lower.reverse().join('L')}Z` : '',
+      line: drawn ? `M${upper.join('L')}` : ''
     }
   })
 

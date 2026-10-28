@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { api, useAction } from '../api'
-import { formatBytes, KIND_LABEL, speedText, type SpeedUnit } from '../format'
+import { formatBytes, speedText, type SpeedUnit } from '../format'
 import { KindIcon } from '../icons'
-import type { NetworkView } from '../types'
+import type { NetworkPatch, NetworkView } from '../types'
 import { Switch } from './Switch'
 
 const GB = 1024 ** 3
 const MB = 1024 ** 2
+
+/** What a row has open under it. */
+type Editor = 'cap' | 'name'
 
 /** What a network is doing, in a word or two. */
 function activity(
@@ -92,6 +95,57 @@ function CapEditor({
   )
 }
 
+function NameEditor({
+  network,
+  busy,
+  onSave,
+  onClose
+}: {
+  network: NetworkView
+  busy: boolean
+  /** Null: back to the name it has by default. */
+  onSave: (name: string | null) => void
+  onClose: () => void
+}): React.JSX.Element {
+  const [text, setText] = useState(network.label)
+  const name = text.trim()
+  return (
+    <form
+      className="cap-editor"
+      onSubmit={(event) => {
+        event.preventDefault()
+        if (name) onSave(name)
+      }}
+    >
+      <label className="cap-label" htmlFor={`name-${network.id}`}>
+        Name
+      </label>
+      <input
+        id={`name-${network.id}`}
+        className="name-input"
+        value={text}
+        maxLength={40}
+        autoFocus
+        onChange={(event) => setText(event.target.value)}
+      />
+      <button type="submit" className="btn btn-primary" disabled={!name || busy}>
+        Save
+      </button>
+      {network.customName !== null && (
+        <button type="button" className="btn" disabled={busy} onClick={() => onSave(null)}>
+          Reset name
+        </button>
+      )}
+      <button type="button" className="link" onClick={onClose}>
+        Cancel
+      </button>
+      <p className="cap-help">
+        Only Steam Boost uses this name. Your system still calls it {network.adapter}.
+      </p>
+    </form>
+  )
+}
+
 function NetworkRow({
   network,
   color,
@@ -106,35 +160,45 @@ function NetworkRow({
   color: string
   unit: SpeedUnit
   running: boolean
-  editing: boolean
+  editing: Editor | null
   busy: boolean
-  onEdit: (open: boolean) => void
-  onChange: (patch: { enabled?: boolean; dailyCapBytes?: number | null }) => void
+  onEdit: (editor: Editor | null) => void
+  onChange: (patch: NetworkPatch) => void
 }): React.JSX.Element {
   const { text, tone } = activity(network, unit, running)
   const cap = network.dailyCapBytes
   const share = cap ? Math.min(1, network.usedTodayBytes / cap) : 0
+  const toggle = (editor: Editor): void => onEdit(editing === editor ? null : editor)
+  // The OS's own name, under the one shown here, when it says something that one doesn't: how to
+  // find "Phone (USB tethering)" in Windows' settings, as "Ethernet 3".
+  const adapter =
+    network.adapter.toLowerCase() === network.label.toLowerCase() ? null : network.adapter
   return (
     <li className={`network role-${network.role}`}>
       <span className="net-icon" style={{ color }}>
         <KindIcon kind={network.kind} size={18} />
       </span>
       <div className="net-main">
-        <div className="net-name">{network.label}</div>
-        <div className="net-meta">
-          {KIND_LABEL[network.kind]}
-          {network.address ? ` · ${network.address}` : ''}
+        <div
+          className="net-name"
+          title={network.address ? `${network.adapter} · ${network.address}` : network.adapter}
+        >
+          {network.label}
         </div>
+        {adapter && <div className="net-meta">{adapter}</div>}
         <div className="net-usage">
           <span>
             {formatBytes(network.usedTodayBytes)}
             {cap ? ` of ${formatBytes(cap)}` : ''} today
           </span>
           {network.role !== 'no-route' && (
-            <button type="button" className="link" onClick={() => onEdit(!editing)}>
+            <button type="button" className="link" onClick={() => toggle('cap')}>
               {cap ? 'Change cap' : 'Set daily cap'}
             </button>
           )}
+          <button type="button" className="link" onClick={() => toggle('name')}>
+            Rename
+          </button>
         </div>
         {cap !== null && (
           <div className="meter" aria-hidden>
@@ -155,14 +219,25 @@ function NetworkRow({
           onChange={(enabled) => onChange({ enabled })}
         />
       </div>
-      {editing && (
+      {editing === 'cap' && (
         <CapEditor
           network={network}
           busy={busy}
-          onClose={() => onEdit(false)}
+          onClose={() => onEdit(null)}
           onSave={(bytes) => {
             onChange({ dailyCapBytes: bytes })
-            onEdit(false)
+            onEdit(null)
+          }}
+        />
+      )}
+      {editing === 'name' && (
+        <NameEditor
+          network={network}
+          busy={busy}
+          onClose={() => onEdit(null)}
+          onSave={(name) => {
+            onChange({ name })
+            onEdit(null)
           }}
         />
       )}
@@ -186,7 +261,7 @@ export function NetworkList({
   onError: (message: string) => void
 }): React.JSX.Element {
   const { busy, run } = useAction(onError)
-  const [editing, setEditing] = useState<string | null>(null)
+  const [editing, setEditing] = useState<{ id: string; editor: Editor } | null>(null)
   const active = networks.filter((network) => network.role === 'active').length
   // Ones switched off or capped are still there to use: the tip is for when there's no second.
   const usable = networks.filter((network) => network.role !== 'no-route').length
@@ -209,9 +284,9 @@ export function NetworkList({
               color={colorOf(network.id)}
               unit={unit}
               running={running}
-              editing={editing === network.id}
+              editing={editing?.id === network.id ? editing.editor : null}
               busy={busy === network.id}
-              onEdit={(open) => setEditing(open ? network.id : null)}
+              onEdit={(editor) => setEditing(editor ? { id: network.id, editor } : null)}
               onChange={(patch) => void run(network.id, () => api().setNetwork(network.id, patch))}
             />
           ))}

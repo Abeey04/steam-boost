@@ -1,4 +1,4 @@
-import type { Sample } from '../api'
+import { averageSpeeds, type Sample } from '../api'
 import { formatBytes, formatSpeed, phaseOf, speedText, type Phase, type SpeedUnit } from '../format'
 import type { AppState } from '../types'
 import { SpeedChart } from './SpeedChart'
@@ -14,7 +14,11 @@ const TONE: Record<Phase, 'off' | 'wait' | 'good' | 'bad'> = {
   boosting: 'good'
 }
 
-/** Where things stand, the combined speed, and the last minute by connection. */
+/** Seconds of speeds the shares and the gain are averaged over, so they don't jump every second. */
+const STEADY_SECONDS = 5
+
+/** Where things stand, the combined speed and what the other connections add, the last minute by
+ * connection, and each one's share. */
 export function Hero({
   state,
   samples,
@@ -41,19 +45,39 @@ export function Hero({
     )
     .map((network) => network.id)
     .sort((a, b) => rankOf(a) - rankOf(b))
-  const moving = state.networks.filter((network) => network.speedBytesPerSec > 0)
+  // What each connection has carried lately, in the chart's order.
+  const steady = averageSpeeds(samples, STEADY_SECONDS)
+  const parts = enabled
+    ? state.networks
+        .filter((network) => (steady[network.id] ?? 0) > 0)
+        .map((network) => ({ network, speed: steady[network.id] }))
+        .sort((a, b) => rankOf(a.network.id) - rankOf(b.network.id))
+    : []
+  const total = parts.reduce((sum, part) => sum + part.speed, 0)
+  const fastest = parts.reduce<(typeof parts)[number] | null>(
+    (best, part) => (!best || part.speed > best.speed ? part : best),
+    null
+  )
+  // What the others carry on top of the fastest connection's own speed.
+  const gain =
+    fastest && parts.length > 1 ? Math.round(((total - fastest.speed) / fastest.speed) * 100) : 0
   const { sessionBytes, requests } = state.boost
 
-  // Only where things stand is announced as it changes: the speed, chart and legend below it
+  // Only where things stand is announced as it changes: the speed, chart and shares below it
   // change every second, and a screen reader would read them out every second too.
   return (
     <section className={`card hero phase-${phase}`}>
       <div className="hero-status">
         <span className={`dot tone-${TONE[phase]}`} aria-hidden />
-        <div aria-live="polite" aria-atomic="true">
+        <div className="hero-text" aria-live="polite" aria-atomic="true">
           <div className="hero-title">{title}</div>
           <div className="hero-detail">{detail}</div>
         </div>
+        {fastest && gain >= 5 && (
+          <span className="gain">
+            +{gain}% on top of {fastest.network.label}
+          </span>
+        )}
       </div>
       <button
         type="button"
@@ -65,17 +89,27 @@ export function Hero({
         <span className="speed-unit">{speed.unit}</span>
       </button>
       <SpeedChart samples={samples} series={series} colorOf={colorOf} unit={unit} />
+      {parts.length > 0 && (
+        <div className="share-bar" aria-hidden>
+          {parts.map(({ network, speed: carried }) => (
+            <span key={network.id} style={{ flexGrow: carried, background: colorOf(network.id) }} />
+          ))}
+        </div>
+      )}
       <div className="legend">
-        {moving.length === 0 ? (
+        {parts.length === 0 ? (
           <span className="legend-empty">
             {enabled ? 'Nothing downloading right now.' : 'Turn it on to boost Steam downloads.'}
           </span>
         ) : (
-          moving.map((network) => (
+          parts.map(({ network, speed: carried }) => (
             <span key={network.id} className="legend-item">
               <span className="swatch" style={{ background: colorOf(network.id) }} />
               {network.label}
-              <span className="legend-speed">{speedText(network.speedBytesPerSec, unit)}</span>
+              <span className="legend-speed">
+                {speedText(network.speedBytesPerSec, unit)}
+                {parts.length > 1 ? ` · ${Math.round((carried / total) * 100)}%` : ''}
+              </span>
             </span>
           ))
         )}

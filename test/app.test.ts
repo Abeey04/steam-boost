@@ -9,6 +9,7 @@ import type { NetworkInterfaceInfo } from '../src/shared/network'
 import { BoostController } from '../src/main/boostController'
 import { diagnosticsReport } from '../src/main/diagnostics'
 import { listenAddress } from '../src/main/listenAddress'
+import { friendlyName, friendlyNames } from '../src/main/network/names'
 import { DEFAULT_SETTINGS, sanitizeSettings, withNetwork, withSettings } from '../src/main/settings'
 import {
   BEGIN_MARK,
@@ -72,6 +73,27 @@ test('a settings patch changes what it names; network patches set and clear caps
     enabled: true
   })
   assert.equal(cleared.networks['phone'], undefined, 'back to the defaults: no entry at all')
+})
+
+test('a network can be given a name of its own, kept to one tidy line', () => {
+  const read = sanitizeSettings({
+    networks: {
+      'Ethernet 3': { name: "  Mum's\n  phone  " },
+      'Wi-Fi': { name: 'x'.repeat(60) },
+      'Wi-Fi 2': { name: `${'x'.repeat(39)}👍👍` },
+      Ethernet: { name: '   ' },
+      Other: { name: 42 }
+    }
+  })
+  assert.deepEqual(read.networks, {
+    'Ethernet 3': { name: "Mum's phone" },
+    'Wi-Fi': { name: 'x'.repeat(40) },
+    // Cut by character: the emoji at the end stays whole.
+    'Wi-Fi 2': { name: `${'x'.repeat(39)}👍` }
+  })
+  const named = withNetwork(DEFAULT_SETTINGS, 'Ethernet 3', { name: 'Phone' })
+  assert.deepEqual(named.networks['Ethernet 3'], { name: 'Phone' })
+  assert.equal(withNetwork(named, 'Ethernet 3', { name: null }).networks['Ethernet 3'], undefined)
 })
 
 // --- Daily usage --------------------------------------------------------------------------------
@@ -237,6 +259,37 @@ test("the LAN address is a Wi-Fi or Ethernet one before a phone's", () => {
   const lanOnly = network('Ethernet', '10.0.0.4')
   assert.equal(listenAddress('lan', [lanOnly, wifi], new Set(['Wi-Fi'])), '192.168.1.5')
   assert.equal(listenAddress('lan', [vpn], null), null)
+})
+
+// --- What networks are called -----------------------------------------------------------------
+
+test('networks are called what they are, and two alike keep the names the OS gives them', () => {
+  const adapter = (
+    id: string,
+    kind: NetworkInterfaceInfo['kind'],
+    description?: string
+  ): NetworkInterfaceInfo => ({ ...network(id, '192.168.0.2', kind), description })
+  const cases: Array<[NetworkInterfaceInfo, string]> = [
+    [
+      adapter('Ethernet 3', 'usb', 'Remote NDIS based Internet Sharing Device'),
+      'Phone (USB tethering)'
+    ],
+    [adapter('Ethernet 4', 'usb', 'Apple Mobile Device Ethernet'), 'iPhone (USB)'],
+    [adapter('en6', 'usb', 'iPhone USB'), 'iPhone (USB)'],
+    [adapter('Ethernet 5', 'usb', 'Realtek USB GbE Family Controller'), 'USB network adapter'],
+    // Linux says what a device is called, not what it is.
+    [adapter('enp0s20f0u1', 'usb'), 'Phone or USB adapter'],
+    [adapter('WLAN', 'wifi', 'Intel(R) Wi-Fi 6 AX201 160MHz'), 'Wi-Fi'],
+    [adapter('enp3s0', 'ethernet'), 'Ethernet'],
+    [adapter('Tailscale', 'other', 'Tailscale Tunnel'), 'Tailscale']
+  ]
+  for (const [iface, name] of cases) assert.equal(friendlyName(iface), name, iface.id)
+  const names = friendlyNames([
+    adapter('Wi-Fi', 'wifi', 'Intel(R) Wi-Fi 6 AX201 160MHz'),
+    adapter('Wi-Fi 2', 'wifi', 'TP-Link Wireless USB Adapter'),
+    adapter('Ethernet 3', 'usb', 'Remote NDIS based Internet Sharing Device')
+  ])
+  assert.deepEqual([...names.values()], ['Wi-Fi', 'Wi-Fi 2', 'Phone (USB tethering)'])
 })
 
 // --- The hosts file -----------------------------------------------------------------------------
@@ -423,7 +476,9 @@ test('diagnostics hold the status, the networks, the hosts line and the logs', (
     networks: [
       {
         id: 'Ethernet 3',
-        label: 'Ethernet 3',
+        label: 'Phone (USB tethering)',
+        adapter: 'Ethernet 3',
+        customName: null,
         kind: 'usb',
         address: '192.168.42.17',
         role: 'capped',
@@ -448,7 +503,7 @@ test('diagnostics hold the status, the networks, the hosts line and the logs', (
     'Steam Boost 0.1.0 on win32',
     'hosts entry: set',
     'hint: try-lan',
-    '- Ethernet 3 [Ethernet 3] usb 192.168.42.17: capped',
+    '- Phone (USB tethering) [Ethernet 3] usb 192.168.42.17: capped',
     '127.0.0.1 lancache.steamcontent.com',
     "couldn't find Steam's content_log.txt",
     'listening on 127.0.0.1:80'

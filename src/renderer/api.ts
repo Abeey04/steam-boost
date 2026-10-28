@@ -92,6 +92,18 @@ export function useSpeedHistory(state: AppState | null): Sample[] {
   return samples
 }
 
+/** Each network's average over the last `seconds` of samples, a second without it counting as
+ * nothing: steadier than one second's speeds, for shares and the gain. */
+export function averageSpeeds(samples: readonly Sample[], seconds: number): Record<string, number> {
+  const recent = samples.slice(-seconds)
+  const sums: Record<string, number> = {}
+  for (const sample of recent) {
+    for (const [id, speed] of Object.entries(sample.speeds)) sums[id] = (sums[id] ?? 0) + speed
+  }
+  for (const id of Object.keys(sums)) sums[id] /= recent.length
+  return sums
+}
+
 const PALETTE = ['#4cc2ff', '#ffa94d', '#c58bff', '#ff7eb6', '#2fd3b5', '#f5d04c']
 
 /** A colour per network that stays put for the session: given out in the order they're seen. */

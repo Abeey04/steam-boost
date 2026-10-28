@@ -242,6 +242,27 @@ h2 {
   gap: 10px;
 }
 
+.hero-text {
+  flex: 1;
+  min-width: 0;
+}
+
+/* What the other connections carry on top of the fastest one. */
+.gain {
+  flex: none;
+  max-width: 55%;
+  overflow: hidden;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .dot {
   flex: none;
   width: 10px;
@@ -357,6 +378,20 @@ h2 {
   vector-effect: non-scaling-stroke;
 }
 
+/* Each connection's part of the speed lately, in the chart's colours and order. */
+.share-bar {
+  display: flex;
+  gap: 3px;
+  height: 8px;
+  margin-top: 10px;
+}
+
+.share-bar span {
+  min-width: 4px;
+  border-radius: 3px;
+  transition: flex-grow 0.6s ease;
+}
+
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -395,7 +430,104 @@ h2 {
   font-variant-numeric: tabular-nums;
 }
 
-/* Setup steps */
+/* Setup guide: the first card, until Steam has used Steam Boost */
+
+.guide {
+  display: grid;
+  gap: 14px;
+}
+
+.guide-head {
+  display: grid;
+  gap: 4px;
+}
+
+.guide-eyebrow {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.guide-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.guide-title svg {
+  flex: none;
+  color: var(--muted);
+}
+
+.guide-title.bad svg {
+  color: var(--danger);
+}
+
+.guide-text {
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.guide .tip {
+  margin: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.chip span {
+  display: inline-flex;
+}
+
+/* .btn comes later, so this needs the extra class to win. */
+.btn.btn-wide {
+  width: 100%;
+  min-height: 38px;
+  font-size: 14px;
+}
+
+.guide-fine {
+  margin: -6px 0 0;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.callout {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--warn-soft);
+  font-size: 12.5px;
+}
+
+/* Set up: one line once it works, opening to the three things that make it work */
 
 .setup-done {
   display: flex;
@@ -422,7 +554,7 @@ h2 {
 
 .step {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) auto;
+  grid-template-columns: 24px minmax(0, 1fr);
   align-items: start;
   gap: 2px 12px;
 }
@@ -432,33 +564,9 @@ h2 {
   place-items: center;
   width: 24px;
   height: 24px;
-  border: 1.5px solid var(--line-strong);
   border-radius: 50%;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 650;
-}
-
-.step-done .step-mark {
-  border-color: transparent;
   background: var(--accent-soft);
   color: var(--accent-strong);
-}
-
-.step-bad .step-mark {
-  border-color: transparent;
-  background: var(--danger-soft);
-  color: var(--danger);
-}
-
-.step-busy .step-mark {
-  border-color: transparent;
-  color: var(--muted);
-}
-
-.step-todo .step-mark {
-  border-color: var(--warn);
-  color: var(--warn);
 }
 
 .step-title {
@@ -470,28 +578,6 @@ h2 {
   color: var(--muted);
   font-size: 12.5px;
   overflow-wrap: anywhere;
-}
-
-.step-action {
-  align-self: center;
-}
-
-.note {
-  margin-top: 8px;
-  color: var(--text);
-  font-size: 12.5px;
-}
-
-.callout {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  margin-top: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--warn-soft);
-  font-size: 12.5px;
 }
 
 /* Buttons and switches */
@@ -765,6 +851,16 @@ h2 {
   background: var(--panel);
 }
 
+.name-input {
+  flex: 1 1 140px;
+  min-width: 0;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
 .cap-help {
   flex-basis: 100%;
   margin: 2px 0 0;
@@ -880,5 +976,9 @@ h2 {
   .spin,
   .phase-boosting .dot {
     animation: none;
+  }
+
+  .share-bar span {
+    transition: none;
   }
 }

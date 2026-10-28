@@ -12,6 +12,7 @@ import type {
 } from '../shared/boost'
 import type { NetworkInterfaceInfo } from '../shared/network'
 import { listenAddress, LOOPBACK } from './listenAddress'
+import { friendlyNames } from './network/names'
 import { findCacheSightings, findSteamDir, readContentLogTail } from './steam/contentLog'
 import { defaultRouteInterfaces } from './steam/defaultRoutes'
 import { writeHostsElevated } from './steam/elevatedHosts'
@@ -377,14 +378,17 @@ export class BoostController {
     const perNetwork = new Map((stats?.networks ?? []).map((network) => [network.id, network]))
     const settings = this.deps.settings()
     const lastRequestAt = stats?.lastRequestAt ?? null
-    const networks = (this.deps.networks() ?? [])
-      .filter((iface) => iface.kind !== 'bridge')
+    const shown = (this.deps.networks() ?? []).filter((iface) => iface.kind !== 'bridge')
+    const names = friendlyNames(shown)
+    const networks = shown
       .map((iface): NetworkView => {
         const own = settings.networks[iface.id] ?? {}
         const live = perNetwork.get(iface.id)
         return {
           id: iface.id,
-          label: iface.displayName,
+          label: own.name ?? names.get(iface.id) ?? iface.displayName,
+          adapter: iface.displayName,
+          customName: own.name ?? null,
           kind: iface.kind,
           address:
             iface.addresses.find((entry) => entry.family === 4)?.address ??

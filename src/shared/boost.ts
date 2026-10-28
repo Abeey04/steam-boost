@@ -39,7 +39,13 @@ export type NetworkRole = 'active' | 'off' | 'no-route' | 'capped'
 
 export interface NetworkView {
   id: string
+  /** What the window calls it: the name it was given here, else what it is ("Phone (USB
+   * tethering)", main/network/names.ts). */
   label: string
+  /** The OS's own name for it ("Ethernet 3"), as Windows' network settings show it. */
+  adapter: string
+  /** The name it was given here; null: none. */
+  customName: string | null
   kind: NetworkInterfaceKind
   /** Its IPv4 address, to tell two adapters apart. */
   address: string | null
@@ -62,6 +68,8 @@ export interface NetworkSettings {
   enabled?: boolean
   /** Bytes a day; unset: no cap. */
   dailyCapBytes?: number
+  /** A name of its own ("Home fibre"); unset: what it is. */
+  name?: string
 }
 
 export interface AppSettings {
@@ -127,6 +135,8 @@ export interface NetworkPatch {
   enabled?: boolean
   /** Null removes the cap. */
   dailyCapBytes?: number | null
+  /** Null goes back to the name it has by default. */
+  name?: string | null
 }
 
 export type SettingsPatch = Partial<Omit<AppSettings, 'networks'>>
