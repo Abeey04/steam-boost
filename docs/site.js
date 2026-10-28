@@ -1,6 +1,6 @@
 // Steam Boost's website (this folder, served by GitHub Pages): download links for the latest
-// release, the right button for the visitor's computer (on a phone, a way to send the page on to
-// one), and the line map held still for people who'd rather no motion.
+// release with its version and sizes, the right button for the visitor's computer (on a phone, a
+// way to send the page on to one), and the speed-up calculator.
 
 const REPO = 'Abeey04/steam-boost'
 const RELEASES = `https://github.com/${REPO}/releases/latest`
@@ -112,8 +112,11 @@ function pointLinks(hrefs) {
   }
 }
 
-/** The latest release from GitHub's API: its version, and each file's exact address. The links
- * work without it, which is as well: it allows 60 calls an hour from each IP address. */
+/** A file's size as Windows and GitHub show it: in MB of 1024 × 1024 bytes. */
+const megabytes = (bytes) => `${Math.round(bytes / 1024 ** 2)} MB`
+
+/** The latest release from GitHub's API: its version, and each file's exact address and size. The
+ * links work without it, which is as well: it allows 60 calls an hour from each IP address. */
 async function loadRelease() {
   let response
   try {
@@ -134,41 +137,97 @@ async function loadRelease() {
   const release = await response.json().catch(() => null)
   if (!release) return
   const hrefs = {}
+  const sizes = {}
   for (const asset of release.assets ?? []) {
     for (const [key, matches] of Object.entries(MATCHERS)) {
-      if (!hrefs[key] && matches(asset.name)) hrefs[key] = asset.browser_download_url
+      if (!hrefs[key] && matches(asset.name)) {
+        hrefs[key] = asset.browser_download_url
+        sizes[key] = asset.size
+      }
     }
   }
   // A file this release lacks: its release page, rather than a missing file.
   for (const key of Object.keys(DIRECT)) hrefs[key] ??= release.html_url ?? RELEASES
   pointLinks(hrefs)
-  const version = document.getElementById('download-version')
-  if (version && release.tag_name) {
-    version.textContent = `Version ${release.tag_name.replace(/^v/, '')}. `
+
+  const version = release.tag_name ? release.tag_name.replace(/^v/, '') : null
+  const downloadVersion = document.getElementById('download-version')
+  if (downloadVersion && version) {
+    downloadVersion.textContent = `Version ${version}. `
     const notes = document.createElement('a')
     notes.href = release.html_url
     notes.textContent = 'What changed'
-    version.append(notes)
+    downloadVersion.append(notes)
+  }
+  for (const element of document.querySelectorAll('[data-size-of]')) {
+    const bytes = sizes[element.dataset.sizeOf]
+    if (bytes) element.textContent = `${megabytes(bytes)}${version ? `, version ${version}` : ''}`
+  }
+  // Under the main button: the version and the size of what it downloads (not on a phone).
+  const primary = document.getElementById('primary-download')
+  const heroVersion = document.getElementById('hero-version')
+  const primaryBytes = primary?.dataset.asset ? sizes[primary.dataset.asset] : undefined
+  if (heroVersion && version && primaryBytes) {
+    heroVersion.textContent = `Version ${version} · ${megabytes(primaryBytes)}`
+    heroVersion.hidden = false
   }
 }
 
-function holdStillIfAsked() {
-  const svg = document.getElementById('line-map')
-  const query = window.matchMedia('(prefers-reduced-motion: reduce)')
-  const apply = () => {
-    if (!svg || typeof svg.pauseAnimations !== 'function') return
-    if (query.matches) {
-      // Paused partway, so the pieces sit spread along their lines.
-      svg.setCurrentTime(1.6)
-      svg.pauseAnimations()
-    } else {
-      svg.unpauseAnimations()
-    }
+/** The calculator: download times from Mbps and GB, and line widths that follow the speeds. */
+function calculator() {
+  const $ = (id) => document.getElementById(id)
+  const home = $('calc-home')
+  const homeRange = $('calc-home-range')
+  const phone = $('calc-phone')
+  const phoneRange = $('calc-phone-range')
+  const size = $('calc-size')
+  if (!home || !homeRange || !phone || !phoneRange || !size) return
+
+  const clamp = (value, low, high) => Math.min(high, Math.max(low, value))
+  const duration = (seconds) => {
+    const minutes = Math.round(seconds / 60)
+    if (minutes < 60) return `${minutes} min`
+    return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')} min`
   }
-  apply()
-  query.addEventListener?.('change', apply)
+
+  const update = () => {
+    const homeMbps = clamp(Number(home.value) || 1, 1, 2000)
+    const phoneMbps = clamp(Number(phone.value) || 0, 0, 2000)
+    const megabits = Number(size.value) * 8000
+    const alone = megabits / homeMbps
+    const both = megabits / (homeMbps + phoneMbps)
+    $('out-alone').textContent = duration(alone)
+    $('out-both').textContent = duration(both)
+    $('out-saved').textContent = duration(alone - both)
+    $('calc-summary').textContent =
+      phoneMbps > 0
+        ? `${Math.round((phoneMbps / homeMbps) * 100)}% faster than home alone.`
+        : 'Add a second connection to see a gain.'
+    const total = homeMbps + phoneMbps
+    const width = (mbps) => (3 + 21 * (mbps / total)).toFixed(1)
+    $('calc-line-home').setAttribute('stroke-width', width(homeMbps))
+    $('calc-line-phone').setAttribute('stroke-width', phoneMbps > 0 ? width(phoneMbps) : '2')
+    $('calc-label-home').textContent = `${homeMbps} Mbps`
+    $('calc-label-phone').textContent = `${phoneMbps} Mbps`
+    $('calc-label-total').textContent = `${total} Mbps · ${(total / 8).toFixed(1)} MB/s`
+  }
+
+  const pair = (number, range) => {
+    range.addEventListener('input', () => {
+      number.value = range.value
+      update()
+    })
+    number.addEventListener('input', () => {
+      range.value = number.value
+      update()
+    })
+  }
+  pair(home, homeRange)
+  pair(phone, phoneRange)
+  size.addEventListener('change', update)
+  update()
 }
 
 primaryButton()
-holdStillIfAsked()
+calculator()
 void loadRelease()

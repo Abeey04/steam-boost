@@ -1,0 +1,233 @@
+/* Steam Boost's look, for the website and, from its redesign, the app: the typeface, colour and
+   type tokens, and the few pieces both use (buttons, labels, code). Light or dark with the
+   system. Every text colour reads at 4.5:1 or better on the surfaces it is used on.
+
+   Type: Archivo, one variable font with a width axis. Headings run wider (--wide) for a bit of
+   character; text stays at normal width, which reads best. Green is Steam Boost's: the line the
+   connections merge into, and the one action that matters on a screen. Blue, orange and purple
+   stand for Wi-Fi, a phone and Ethernet, as in the logo, and only ever colour marks, not text. */
+
+@font-face {
+  font-family: 'Archivo';
+  src: url('fonts/archivo-latin.woff2') format('woff2');
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light dark;
+
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #eef1f4;
+  --line: #e2e5ea;
+  --line-strong: #cdd2d9;
+  --text: #11151b;
+  --text-2: #4a5462;
+  --text-3: #5d6775;
+
+  --brand: #0b7d48;
+  --brand-hover: #096a3d;
+  --brand-ink: #ffffff;
+  --brand-text: #0a7442;
+  --brand-soft: rgba(19, 160, 95, 0.12);
+  --brand-line: #13a05f;
+
+  --wifi: #1e86d8;
+  --phone: #d9750a;
+  --ethernet: #7b52e0;
+
+  --warn: #9a5c00;
+  --warn-soft: rgba(245, 166, 35, 0.16);
+  --danger: #b93535;
+  --danger-soft: rgba(207, 63, 63, 0.1);
+  --focus: #1e6fe0;
+
+  --shadow-1: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --shadow-2: 0 28px 56px -28px rgba(16, 24, 40, 0.32);
+
+  --font: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'Cascadia Mono', 'SF Mono', Consolas, monospace;
+  --wide: 112%;
+
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 18px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0d11;
+    --surface: #12151b;
+    --surface-2: #1a1e26;
+    --line: #242933;
+    --line-strong: #343b47;
+    --text: #e9ecf1;
+    --text-2: #a7b0bc;
+    --text-3: #8b95a2;
+
+    --brand: #3ddc8a;
+    --brand-hover: #6ceba8;
+    --brand-ink: #04150c;
+    --brand-text: #5fe7a0;
+    --brand-soft: rgba(61, 220, 138, 0.12);
+    --brand-line: #3ddc8a;
+
+    --wifi: #5ab0ff;
+    --phone: #ffa94d;
+    --ethernet: #b48cff;
+
+    --warn: #f5b84a;
+    --warn-soft: rgba(245, 184, 74, 0.13);
+    --danger: #ff7a7a;
+    --danger-soft: rgba(255, 112, 112, 0.12);
+    --focus: #6aa8ff;
+
+    --shadow-1: none;
+    --shadow-2: 0 32px 64px -32px rgba(0, 0, 0, 0.75);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 400 17px/1.65 var(--font);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--brand-soft);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  color: var(--text);
+  font-weight: 750;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--brand-text);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  font-family: var(--mono);
+  font-size: 0.86em;
+  overflow-wrap: anywhere;
+}
+
+/* Buttons: one primary per screen, in green; the rest quiet. */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: 650 15px/1.2 var(--font);
+  font-stretch: var(--wide);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.btn:hover {
+  border-color: var(--text-3);
+}
+
+.btn-primary {
+  border-color: transparent;
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+
+.btn-primary:hover {
+  border-color: transparent;
+  background: var(--brand-hover);
+}
+
+.btn-large {
+  min-height: 54px;
+  padding: 0 26px;
+  font-size: 16.5px;
+}
+
+.btn-small {
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+/* Labels */
+
+.eyebrow {
+  color: var(--text-3);
+  font-size: 12.5px;
+  font-weight: 650;
+  font-stretch: var(--wide);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  vertical-align: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}

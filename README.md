@@ -136,7 +136,9 @@ Terminal and open it again.
 ## The website
 
 `docs/` is the website: plain HTML and CSS, with download links straight to the latest release's
-files, which `site.js` swaps for the exact ones when GitHub's API answers. GitHub Pages serves it at https://abeey04.github.io/steam-boost/ with the repository's Settings › Pages set to
+files, which `site.js` swaps for the exact ones when GitHub's API answers. Its look (the
+typeface, colours and buttons) is `theme.css`, kept apart from the page layout in `styles.css`
+so the app can share it. GitHub Pages serves it at https://abeey04.github.io/steam-boost/ with the repository's Settings › Pages set to
 **Deploy from a branch**, branch `main`, folder `/docs`.
 
 ### A custom domain, later
@@ -151,7 +153,8 @@ To move the site to steamboost.app once that domain is registered to you:
 2. In Settings › Pages, enter `steamboost.app` as the custom domain. Once the DNS check passes,
    tick **Enforce HTTPS**. GitHub adds `docs/CNAME` in a commit of its own: pull it.
 3. Point the project at the new address: `site` in `src/shared/project.ts`, `homepage` in
-   `package.json`, and the canonical and `og:` addresses at the top of `docs/index.html`.
+   `package.json`, the canonical and `og:` addresses at the top of `docs/index.html`, and the
+   `/steam-boost/` paths in `docs/404.html`.
 
 See GitHub's guide to [managing a custom domain](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site).
 
@@ -162,7 +165,8 @@ See GitHub's guide to [managing a custom domain](https://docs.github.com/en/page
 - [lancache.net](https://lancache.net), [SteamKit2](https://github.com/SteamRE/SteamKit) and
   [steam-lancache-prefill](https://github.com/tpill90/steam-lancache-prefill), for how Steam
   finds and talks to a cache.
-- [Overpass](https://github.com/RedHatOfficial/Overpass) (SIL Open Font License), the website's typeface.
+- [Archivo](https://github.com/Omnibus-Type/Archivo) by Omnibus-Type (SIL Open Font License), the
+  website's typeface.
 
 Steam Boost is not affiliated with Valve Corporation. Steam and the Steam logo are trademarks of
 Valve Corporation.
