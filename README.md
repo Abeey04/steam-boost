@@ -127,8 +127,11 @@ networks with these, and `STEAM_BOOST_USER_DATA` keeps settings and logs in anot
    (`releases/latest/download/steam-boost-setup.exe`), so keep the names `electron-builder.yml`
    gives them.
 
-Builds aren't code-signed yet, so Windows shows a SmartScreen warning on first run and macOS asks
-to be told the app is fine (right-click › Open).
+Builds aren't code-signed yet. Windows shows a SmartScreen warning on first run: choose More info,
+then Run anyway. macOS blocks the app the first time it's opened: go to System Settings › Privacy &
+Security and click Open Anyway (macOS 15 no longer offers right-click › Open for this). If macOS
+says the app is damaged, run `xattr -dr com.apple.quarantine "/Applications/Steam Boost.app"` in
+Terminal and open it again.
 
 ## The website
 

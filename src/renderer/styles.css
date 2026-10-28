@@ -1,4 +1,5 @@
-/* Steam Boost's window. Dark or light with the system; one column of cards. */
+/* Steam Boost's window. Dark or light with the system; one column of cards. Every text colour
+   reads at 4.5:1 or better (WCAG AA) on each surface it's used on, in both themes. */
 
 :root {
   color-scheme: light dark;
@@ -9,14 +10,16 @@
   --line-strong: #cfd4db;
   --text: #13161b;
   --muted: #5a6370;
-  --faint: #8a929d;
+  --faint: #666f7b;
   --accent: #0f9d58;
-  --accent-strong: #0b8049;
+  --accent-strong: #096b3d;
   --accent-ink: #ffffff;
   --accent-soft: rgba(15, 157, 88, 0.12);
-  --warn: #b26b00;
+  /* A primary button's fill: white on --accent would be too faint in this theme. */
+  --primary: #0b8049;
+  --warn: #9a5c00;
   --warn-soft: rgba(245, 166, 35, 0.16);
-  --danger: #cf3f3f;
+  --danger: #b93535;
   --danger-soft: rgba(207, 63, 63, 0.1);
   --focus: #2f7cf6;
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.06);
@@ -32,11 +35,12 @@
     --line-strong: #323944;
     --text: #eceef1;
     --muted: #9aa3ae;
-    --faint: #6b737e;
+    --faint: #848c97;
     --accent: #3ee08f;
     --accent-strong: #6cf0ad;
     --accent-ink: #04150c;
     --accent-soft: rgba(62, 224, 143, 0.12);
+    --primary: #3ee08f;
     --warn: #f5b84a;
     --warn-soft: rgba(245, 184, 74, 0.13);
     --danger: #ff7070;
@@ -519,7 +523,7 @@ h2 {
 
 .btn-primary {
   border-color: transparent;
-  background: var(--accent);
+  background: var(--primary);
   color: var(--accent-ink);
 }
 

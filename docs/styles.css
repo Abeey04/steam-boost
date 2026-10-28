@@ -93,6 +93,15 @@ p {
   margin: 0;
 }
 
+code {
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: #eceff3;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+}
+
 .skip {
   position: absolute;
   left: -999px;

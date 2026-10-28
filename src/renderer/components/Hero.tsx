@@ -44,11 +44,13 @@ export function Hero({
   const moving = state.networks.filter((network) => network.speedBytesPerSec > 0)
   const { sessionBytes, requests } = state.boost
 
+  // Only where things stand is announced as it changes: the speed, chart and legend below it
+  // change every second, and a screen reader would read them out every second too.
   return (
-    <section className={`card hero phase-${phase}`} aria-live="polite">
+    <section className={`card hero phase-${phase}`}>
       <div className="hero-status">
         <span className={`dot tone-${TONE[phase]}`} aria-hidden />
-        <div>
+        <div aria-live="polite" aria-atomic="true">
           <div className="hero-title">{title}</div>
           <div className="hero-detail">{detail}</div>
         </div>
