@@ -227,8 +227,8 @@ test('a line of its own for the trigger name, outside the block, is found', () =
 
 test('the hosts file is where each OS keeps it', () => {
   assert.equal(
-    hostsFilePath('win32', { SystemRoot: 'C:\\Windows' }).replace(/\\/g, '/'),
-    'C:/Windows/System32/drivers/etc/hosts'
+    hostsFilePath('win32', { SystemRoot: 'C:\\Windows' }),
+    'C:\\Windows\\System32\\drivers\\etc\\hosts'
   )
   assert.equal(hostsFilePath('darwin', {}), '/etc/hosts')
   assert.equal(hostsFilePath('linux', {}), '/etc/hosts')
@@ -266,7 +266,11 @@ test('Steam is looked for where each OS installs it', () => {
     { 'ProgramFiles(x86)': 'C:\\Program Files (x86)' },
     'C:\\Users\\a'
   )
-  assert.equal(windows[0].replace(/\\/g, '/'), 'C:/Program Files (x86)/Steam')
+  // Each OS's paths as that OS writes them, whichever OS the tests run on.
+  assert.equal(windows[0], 'C:\\Program Files (x86)\\Steam')
+  assert.deepEqual(steamDirCandidates('darwin', {}, '/Users/a'), [
+    '/Users/a/Library/Application Support/Steam'
+  ])
   assert.ok(steamDirCandidates('linux', {}, '/home/a').includes('/home/a/.local/share/Steam'))
 })
 

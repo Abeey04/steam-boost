@@ -110,6 +110,8 @@ export interface SteamBoostOptions {
 export interface SteamBoostStats {
   /** Where it listens: "127.0.0.1:80", or null for a port it isn't listening on. */
   listening: { http: string | null; tls: string | null }
+  /** When Steam last sent a request this boost forwarded (or a Steam HTTPS connection it passed
+   * through); null: never. */
   lastRequestAt: number | null
   requests: { active: number; waiting: number; done: number; failed: number; rejected: number }
   speedBytesPerSec: number
@@ -415,7 +417,6 @@ export class SteamBoost {
 
   private onRequest(req: IncomingMessage, res: ServerResponse): void {
     const now = Date.now()
-    this.lastRequestAt = now
     if (!this.allowed(req.socket)) {
       this.rejected++
       return reply(res, 403, 'This Steam boost only serves this computer.')
@@ -451,6 +452,9 @@ export class SteamBoost {
       this.log(`refused ${req.method} ${req.headers.host ?? '(no host)'}${path}: ${verdict.reason}`)
       return reply(res, verdict.status, verdict.reason)
     }
+    // Only a request it forwards is Steam using the boost: a heartbeat, a status check or a
+    // refused request says nothing about Steam.
+    this.lastRequestAt = now
     this.noteHost(verdict.target.host)
     const method = req.method?.toUpperCase() === 'HEAD' ? 'HEAD' : 'GET'
     const exchange: Exchange = {
@@ -733,7 +737,6 @@ export class SteamBoost {
     }
     this.tunnelClients.add(client)
     client.once('close', () => this.tunnelClients.delete(client))
-    this.lastRequestAt = Date.now()
     let hello = Buffer.alloc(0)
     const timer = setTimeout(() => client.destroy(), HELLO_TIMEOUT_MS)
     const onData = (chunk: Buffer): void => {
@@ -750,6 +753,7 @@ export class SteamBoost {
         client.destroy()
         return
       }
+      this.lastRequestAt = Date.now()
       this.noteHost(name)
       void this.tunnel(client, name, hello)
     }

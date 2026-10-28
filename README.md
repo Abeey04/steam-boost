@@ -122,16 +122,18 @@ networks with these, and `STEAM_BOOST_USER_DATA` keeps settings and logs in anot
 1. Set the new version in `package.json`, commit, and tag it: `git tag v0.2.0 && git push origin main v0.2.0`.
 2. The Release workflow builds Windows, macOS and Linux and leaves a **draft** release with the
    installers and `steam-boost-cli.mjs`.
-3. Publish the draft. The website's download buttons and the app's update notice read the latest
-   published release.
+3. Publish the draft as a full release. The website's download buttons and the app's update notice
+   use GitHub's latest release, which skips pre-releases. The buttons link to each file by name
+   (`releases/latest/download/steam-boost-setup.exe`), so keep the names `electron-builder.yml`
+   gives them.
 
 Builds aren't code-signed yet, so Windows shows a SmartScreen warning on first run and macOS asks
 to be told the app is fine (right-click › Open).
 
 ## The website
 
-`docs/` is the website: plain HTML and CSS, with the download links filled in from the latest
-release. GitHub Pages serves it at https://abeey04.github.io/steam-boost/ with the repository's Settings › Pages set to
+`docs/` is the website: plain HTML and CSS, with download links straight to the latest release's
+files, which `site.js` swaps for the exact ones when GitHub's API answers. GitHub Pages serves it at https://abeey04.github.io/steam-boost/ with the repository's Settings › Pages set to
 **Deploy from a branch**, branch `main`, folder `/docs`.
 
 ### A custom domain, later

@@ -20,8 +20,10 @@ win:
     - target: nsis
       arch: [x64, arm64]
 nsis:
-  # No ${arch}: one installer holds both, and docs/site.js reads a name without one as that.
-  artifactName: ${name}-${version}-setup.${ext}
+  # No file name carries the version, so the website links to the latest release's files by name
+  # (releases/latest/download/steam-boost-setup.exe, see docs/index.html). No ${arch} here: one
+  # installer holds both, and docs/site.js reads a name without one as that.
+  artifactName: ${name}-setup.${ext}
   # Assisted rather than one-click, so people can choose where it goes.
   oneClick: false
   allowToChangeInstallationDirectory: true
@@ -34,7 +36,7 @@ mac:
     - target: dmg
       arch: [x64, arm64]
 dmg:
-  artifactName: ${name}-${version}-${arch}.${ext}
+  artifactName: ${name}-${arch}.${ext}
 linux:
   target:
     - target: AppImage
@@ -43,11 +45,11 @@ linux:
       arch: [x64]
   category: Network
   maintainer: Arpeet Chandane <https://github.com/Abeey04>
-  artifactName: ${name}-${version}-${arch}.${ext}
+  artifactName: ${name}-${arch}.${ext}
 appImage:
-  artifactName: ${name}-${version}-${arch}.${ext}
+  artifactName: ${name}-${arch}.${ext}
 deb:
-  artifactName: ${name}_${version}_${arch}.${ext}
+  artifactName: ${name}_${arch}.${ext}
 npmRebuild: false
 # Builds never publish themselves (--publish never): .github/workflows/release.yml uploads them to a
 # draft GitHub Release.

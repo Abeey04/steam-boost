@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Only a request Steam Boost forwards counts as Steam using it. A status check, a prefill tool's
+  heartbeat or a refused request no longer does, so the window, the tray and
+  `steam-boost-cli check` say when Steam really last asked.
+- Release files no longer carry the version in their names (`steam-boost-setup.exe`,
+  `steam-boost-arm64.dmg`, …), so the website links straight to the newest ones.
+
 ## 0.1.0
 
 The first release: a pre-release for Windows 10 and 11, with experimental macOS and Linux builds.

@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process'
 import { open, stat } from 'node:fs/promises'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { join, posix, win32 } from 'node:path'
 import { promisify } from 'node:util'
 import { TRIGGER_HOST } from './steamHosts'
 
@@ -60,7 +60,8 @@ export function cacheLines(log: string, limit = 8): string[] {
     .slice(-limit)
 }
 
-/** Where Steam is usually installed, most likely first. */
+/** Where Steam is usually installed, most likely first. Written the way `platform` writes paths,
+ * whatever OS this runs on. */
 export function steamDirCandidates(
   platform: NodeJS.Platform = process.platform,
   env: NodeJS.ProcessEnv = process.env,
@@ -68,15 +69,15 @@ export function steamDirCandidates(
 ): string[] {
   if (platform === 'win32') {
     return [
-      join(env['ProgramFiles(x86)'] ?? 'C:\\Program Files (x86)', 'Steam'),
-      join(env['ProgramFiles'] ?? 'C:\\Program Files', 'Steam')
+      win32.join(env['ProgramFiles(x86)'] ?? 'C:\\Program Files (x86)', 'Steam'),
+      win32.join(env['ProgramFiles'] ?? 'C:\\Program Files', 'Steam')
     ]
   }
-  if (platform === 'darwin') return [join(home, 'Library', 'Application Support', 'Steam')]
+  if (platform === 'darwin') return [posix.join(home, 'Library', 'Application Support', 'Steam')]
   return [
-    join(home, '.steam', 'steam'),
-    join(home, '.local', 'share', 'Steam'),
-    join(home, '.var', 'app', 'com.valvesoftware.Steam', '.local', 'share', 'Steam')
+    posix.join(home, '.steam', 'steam'),
+    posix.join(home, '.local', 'share', 'Steam'),
+    posix.join(home, '.var', 'app', 'com.valvesoftware.Steam', '.local', 'share', 'Steam')
   ]
 }
 

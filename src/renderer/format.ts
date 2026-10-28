@@ -51,14 +51,7 @@ export const KIND_LABEL: Record<NetworkInterfaceKindLabel, string> = {
 }
 
 export type Phase =
-  | 'off'
-  | 'starting'
-  | 'error'
-  | 'setup'
-  | 'elsewhere'
-  | 'restart'
-  | 'ready'
-  | 'boosting'
+  'off' | 'starting' | 'error' | 'setup' | 'elsewhere' | 'restart' | 'ready' | 'boosting'
 
 /** Where things stand, as the top of the window says it. */
 export function phaseOf(

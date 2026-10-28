@@ -1,7 +1,7 @@
 name: CI
 
-# Every push to main and every pull request: types, tests (the engine against a mock Steam CDN on
-# loopback), and a build.
+# Every push to main and every pull request: types, formatting, tests (the engine against a mock
+# Steam CDN on loopback), and a build. On Windows too, where most people run Steam Boost.
 on:
   push:
     branches: [main]
@@ -9,7 +9,12 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    name: Check (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -22,6 +27,11 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      # The same on every OS (line endings are LF everywhere, see .gitattributes): once is enough.
+      - name: Formatting
+        if: runner.os == 'Linux'
+        run: npm run format:check
 
       - name: Test
         run: npm test

@@ -1,5 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { win32 } from 'node:path'
 import { TRIGGER_HOST } from './steamHosts'
 
 // The one line that turns Steam boost on for this computer: TRIGGER_HOST pointing at the boost.
@@ -22,7 +22,7 @@ export function hostsFilePath(
   env: NodeJS.ProcessEnv = process.env
 ): string {
   if (platform === 'win32') {
-    return join(
+    return win32.join(
       env['SystemRoot'] ?? env['windir'] ?? 'C:\\Windows',
       'System32',
       'drivers',

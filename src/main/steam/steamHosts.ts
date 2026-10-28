@@ -83,8 +83,7 @@ export interface JudgeOptions {
 }
 
 export type Verdict =
-  | { forward: true; target: Target }
-  | { forward: false; status: number; reason: string }
+  { forward: true; target: Target } | { forward: false; status: number; reason: string }
 
 /** Whether to forward a request, and where. Port 443 in the Host header means HTTPS onward;
  * anything else is plain HTTP, as Steam would have sent it to a LAN cache. */
