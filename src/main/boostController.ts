@@ -312,18 +312,22 @@ export class BoostController {
   private async runChecks(): Promise<void> {
     const address = this.running?.address ?? this.desiredAddress()
     let hostsEntry: HostsEntry = 'unknown'
-    try {
-      const text = await this.readHosts()
-      // The OS takes the first line for a name, and ours goes in last.
-      const others = otherEntries(text)
-      hostsEntry =
-        others.length > 0 && others[0] !== address
-          ? 'elsewhere'
-          : readEntry(text) === address || others[0] === address
-            ? 'set'
-            : 'missing'
-    } catch {
-      // Unreadable: unknown.
+    // With no address yet (a LAN address, before the first look at the networks) there's nothing
+    // to hold the file against: unknown.
+    if (address !== null) {
+      try {
+        const text = await this.readHosts()
+        // The OS takes the first line for a name, and ours goes in last.
+        const others = otherEntries(text)
+        hostsEntry =
+          others.length > 0 && others[0] !== address
+            ? 'elsewhere'
+            : readEntry(text) === address || others[0] === address
+              ? 'set'
+              : 'missing'
+      } catch {
+        // Unreadable: unknown.
+      }
     }
     const [resolvesTo, steamUsing, steamRunning] = await Promise.all([
       (this.deps.resolveTrigger ?? resolveTrigger)().catch(() => null),

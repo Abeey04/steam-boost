@@ -60,7 +60,9 @@ export function phaseOf(
   if (!settings.enabled) {
     return { phase: 'off', title: 'Off', detail: 'Steam downloads the usual way.' }
   }
-  if (boost.state === 'starting') {
+  // Switched on but not started yet counts as starting: the app has just opened, or was just
+  // switched back on.
+  if (boost.state === 'starting' || boost.state === 'off') {
     return { phase: 'starting', title: 'Starting…', detail: 'Opening port 80 for Steam.' }
   }
   if (boost.state === 'error') {

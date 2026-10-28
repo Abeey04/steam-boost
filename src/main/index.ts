@@ -129,6 +129,10 @@ async function main(): Promise<void> {
     (process.platform === 'darwin' && app.getLoginItemSettings().wasOpenedAtLogin)
   if (!startHidden) showWindow()
 
+  // The hosts file, Steam's log and a DNS lookup answer in milliseconds, the network lookups below
+  // in a second or more each: looked at first, so a window that opens on a set-up PC doesn't show
+  // setup steps until those finish.
+  void boost.refresh()
   await monitor.refresh()
   await boost.start()
   broadcast()

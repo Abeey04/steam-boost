@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { secondsAgo } from '../format'
+import { phaseOf, secondsAgo } from '../format'
 import { CheckIcon } from '../icons'
 import type { AppState } from '../types'
 
@@ -23,7 +23,9 @@ function Step({ title, detail }: { title: string; detail: string }): React.JSX.E
 export function SetupCard({ state }: { state: AppState }): React.JSX.Element | null {
   const [expanded, setExpanded] = useState(false)
   const { boost } = state
-  if (!state.settings.enabled) return null
+  const { phase } = phaseOf(state)
+  // Starting, or off: it can't say yet that Steam uses it.
+  if (phase !== 'ready' && phase !== 'boosting') return null
 
   if (!expanded) {
     return (

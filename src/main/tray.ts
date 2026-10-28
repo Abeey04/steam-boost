@@ -11,9 +11,12 @@ export type Tone = 'off' | 'attention' | 'ready' | 'error'
 /** How things stand, in a colour and a few words. */
 export function toneOf(state: AppState): { tone: Tone; label: string } {
   const { boost } = state
-  if (!state.settings.enabled || boost.state === 'off') return { tone: 'off', label: 'Off' }
+  if (!state.settings.enabled) return { tone: 'off', label: 'Off' }
   if (boost.state === 'error') return { tone: 'error', label: "Couldn't start" }
-  if (boost.state === 'starting') return { tone: 'attention', label: 'Starting…' }
+  // Switched on but not started yet: the app has just opened, or was just switched back on.
+  if (boost.state === 'starting' || boost.state === 'off') {
+    return { tone: 'attention', label: 'Starting…' }
+  }
   if (boost.hostsEntry !== 'set') return { tone: 'attention', label: 'Set up needed' }
   if (boost.lastRequestAt === null && boost.steamUsing !== true) {
     return { tone: 'attention', label: 'Restart Steam to use it' }

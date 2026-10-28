@@ -452,6 +452,33 @@ test('the controller says why it could not start, and starts once it can', async
   }
 })
 
+test('before it starts, the controller can say whether the hosts file points Steam here', async () => {
+  const hosts = `127.0.0.1 localhost\n${BEGIN_MARK}\n127.0.0.1 lancache.steamcontent.com\n# <<< Steam Boost <<<\n`
+  const unstarted = (addressMode: AppSettings['addressMode']): BoostController =>
+    new BoostController({
+      settings: () => ({ ...DEFAULT_SETTINGS, addressMode }),
+      usage: new UsageBook(null),
+      // The OS's networks haven't been looked at yet.
+      networks: () => null,
+      onChange: () => undefined,
+      log: () => undefined,
+      defaultRoutes: async () => null,
+      steamRunning: async () => false,
+      steamDir: async () => null,
+      resolveTrigger: async () => '127.0.0.1',
+      readHosts: async () => hosts,
+      writeHosts: async () => undefined
+    })
+  const loopback = unstarted('loopback')
+  await loopback.refresh()
+  assert.equal(loopback.current.boost.state, 'off', 'not started')
+  assert.equal(loopback.current.boost.hostsEntry, 'set')
+  // A LAN address isn't known until the networks are: nothing to hold the file against yet.
+  const lan = unstarted('lan')
+  await lan.refresh()
+  assert.equal(lan.current.boost.hostsEntry, 'unknown')
+})
+
 // --- Diagnostics -------------------------------------------------------------------------------
 
 test('diagnostics hold the status, the networks, the hosts line and the logs', () => {
