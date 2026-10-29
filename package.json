@@ -1,7 +1,7 @@
 {
   "name": "steam-boost",
   "productName": "Steam Boost",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Download Steam games over every internet connection you have at once.",
   "main": "out/main/index.js",
   "homepage": "https://abeey04.github.io/steam-boost",

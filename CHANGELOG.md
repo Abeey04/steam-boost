@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.2.0
+
+The website's look, and a window that opens on what to do next.
+
+- Until Steam has used Steam Boost, the window opens on one card that says what will change and
+  the one thing to do: setting up and restarting Steam is one button. Once Steam uses it, that card
+  is a one-line summary.
+- While Steam downloads, a chip says what the other connections add on top of the fastest one
+  ("+42% on top of Wi-Fi"), and a bar shows each connection's share of the speed.
+- Connections are called what they are, such as "Phone (USB tethering)" rather than "Ethernet 3",
+  with the system's own name under them, and can be renamed.
+- The window and the tray say Starting while the app opens, rather than showing the setup steps or
+  Off for a moment.
+- A new look, the same as the website's: the Archivo typeface, Wi-Fi in blue, a phone in orange and
+  Ethernet in purple wherever they show, rounder buttons, and switches that are easier to see when
+  off.
+- The chart's scale sits closer above the speed, so the chart uses more of its height, and an idle
+  chart no longer draws a line along the bottom.
+
 ## 0.1.1
 
 - Screen readers announce only where things stand, the status line at the top of the window,
