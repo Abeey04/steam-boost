@@ -31,10 +31,12 @@ html {
   scrollbar-width: thin;
 }
 
-/* The theme's text is sized for reading a page; the window's for a glance. */
+/* The theme's text is sized for reading a page; the window's for a glance, and no line ends on
+   one word alone. */
 body {
   font-size: 14px;
   line-height: 1.5;
+  text-wrap: pretty;
 }
 
 button,

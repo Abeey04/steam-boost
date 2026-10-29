@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/app.png" width="720" alt="Steam Boost downloading over Wi-Fi at 5.9 MB/s and a phone at 2.4 MB/s, 8.4 MB/s together" />
+  <img src="docs/assets/app.png" width="720" alt="Steam Boost in its dark and light themes, downloading over Wi-Fi at 6.4 MB/s and a phone at 2.3 MB/s, 8.75 MB/s together" />
 </p>
 
 Steam Boost splits Steam's downloads across your Wi-Fi, Ethernet and phone, piece by piece, so a
@@ -54,11 +54,11 @@ it names, over one of the connections, the way LANCache does.
 1. **Connect a second internet connection.** On Android, plug the phone in and turn on Settings ›
    Network & internet › Hotspot & tethering › USB tethering. Wi-Fi and Ethernet to the same router
    share one line, so that pair adds nothing.
-2. **Open Steam Boost.** Its window shows three steps:
-   - _Listening on 127.0.0.1:80_: it's ready for Steam.
-   - _Point Steam here_: click **Set up…** and approve the administrator prompt.
-   - _Restart Steam_: click **Restart Steam**. Steam only looks for a cache as it starts.
-3. **Download something in Steam.** Each connection's speed shows in the window, and in the chart.
+2. **Open Steam Boost.** It opens on the one thing to do: click **Set up and restart Steam** and
+   approve the administrator prompt. Steam Boost adds its line to your hosts file, then restarts
+   Steam, which only looks for a cache as it starts.
+3. **Download something in Steam.** Each connection's speed shows in the window, and in the chart,
+   with what the others add on top of the fastest.
 
 Give your phone a **daily cap** (Set daily cap, under its connection) to keep your mobile data in
 check: Steam Boost stops using it once the day's cap is reached and starts again at midnight.

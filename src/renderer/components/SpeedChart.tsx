@@ -8,11 +8,12 @@ const WIDTH = 600
 const HEIGHT = 132
 const MiB = 1024 * 1024
 
-/** A round top for the scale, in bytes a second: 1, 2 or 5 times a power of ten, in MB/s. */
+/** A round top for the scale, in bytes a second: 1, 1.5, 2, 3, 5 or 7.5 times a power of ten, in
+ * MB/s, close enough above the fastest second that the bands fill most of the chart. */
 export function niceMax(bytesPerSec: number): number {
   const mb = Math.max(bytesPerSec / MiB, 1)
   const power = 10 ** Math.floor(Math.log10(mb))
-  const step = [1, 2, 5, 10].find((candidate) => candidate * power >= mb) ?? 10
+  const step = [1, 1.5, 2, 3, 5, 7.5, 10].find((candidate) => candidate * power >= mb) ?? 10
   return step * power * MiB
 }
 
