@@ -48,6 +48,10 @@ export function appTargets(dev = false) {
       minify: !dev,
       sourcemap: dev ? 'inline' : false,
       define: { 'process.env.NODE_ENV': dev ? '"development"' : '"production"' },
+      // The window's look is the website's (docs/theme.css, which styles.css imports), typeface
+      // included: Archivo goes next to the page as fonts/archivo-latin.woff2.
+      loader: { '.woff2': 'file' },
+      assetNames: 'fonts/[name]',
       entryPoints: [resolve(root, 'src/renderer/main.tsx')],
       outfile: resolve(out, 'renderer/index.js'),
       logLevel: 'warning'
@@ -55,10 +59,12 @@ export function appTargets(dev = false) {
   }
 }
 
-/** The page the window loads, and the tray and window icons the main process reads. */
+/** The page the window loads, the font's licence (which goes wherever the font does), and the
+ * tray and window icons the main process reads. */
 export function copyStatic() {
-  mkdirSync(resolve(out, 'renderer'), { recursive: true })
+  mkdirSync(resolve(out, 'renderer/fonts'), { recursive: true })
   cpSync(resolve(root, 'src/renderer/index.html'), resolve(out, 'renderer/index.html'))
+  cpSync(resolve(root, 'docs/fonts/OFL.txt'), resolve(out, 'renderer/fonts/OFL.txt'))
   cpSync(resolve(root, 'resources'), resolve(out, 'main/assets'), { recursive: true })
 }
 

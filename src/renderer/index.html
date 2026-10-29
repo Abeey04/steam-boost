@@ -8,6 +8,10 @@
       content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
     />
     <title>Steam Boost</title>
+    <!-- Fetched now rather than once there's text to draw, so the first text is drawn in it. No
+         crossorigin, unlike a web page's font preload: the window is a file, and Chromium asks
+         for a file's fonts without CORS, so a CORS preload would go unused. -->
+    <link rel="preload" href="./fonts/archivo-latin.woff2" as="font" type="font/woff2" />
     <link rel="stylesheet" href="./index.css" />
     <script defer src="./index.js"></script>
   </head>

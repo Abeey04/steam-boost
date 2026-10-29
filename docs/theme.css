@@ -1,6 +1,7 @@
-/* Steam Boost's look, for the website and, from its redesign, the app: the typeface, colour and
-   type tokens, and the few pieces both use (buttons, labels, code). Light or dark with the
-   system. Every text colour reads at 4.5:1 or better on the surfaces it is used on.
+/* Steam Boost's look, for the website and the app (src/renderer/styles.css imports this file):
+   the typeface, colour and type tokens, and the few pieces both use (buttons, labels, code).
+   Light or dark with the system. Every text colour reads at 4.5:1 or better on the surfaces it
+   is used on.
 
    Type: Archivo, one variable font with a width axis. Headings run wider (--wide) for a bit of
    character; text stays at normal width, which reads best. Green is Steam Boost's: the line the
@@ -36,7 +37,7 @@
   --brand-line: #13a05f;
 
   --wifi: #1e86d8;
-  --phone: #d9750a;
+  --phone: #d0700a;
   --ethernet: #7b52e0;
 
   --warn: #9a5c00;

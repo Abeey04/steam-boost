@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { api, useAction } from '../api'
+import { api, colorStyle, useAction } from '../api'
 import { formatBytes, speedText, type SpeedUnit } from '../format'
 import { KindIcon } from '../icons'
 import type { NetworkPatch, NetworkView } from '../types'
@@ -174,8 +174,8 @@ function NetworkRow({
   const adapter =
     network.adapter.toLowerCase() === network.label.toLowerCase() ? null : network.adapter
   return (
-    <li className={`network role-${network.role}`}>
-      <span className="net-icon" style={{ color }}>
+    <li className={`network role-${network.role}`} style={colorStyle(color)}>
+      <span className="net-icon">
         <KindIcon kind={network.kind} size={18} />
       </span>
       <div className="net-main">

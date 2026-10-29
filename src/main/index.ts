@@ -220,7 +220,8 @@ function createWindow(show: boolean): BrowserWindow {
     minHeight: 560,
     show: false,
     title: PROJECT.name,
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#0c0e11' : '#f4f5f7',
+    // The window's --bg (docs/theme.css), so nothing flashes before the page draws.
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#0b0d11' : '#f6f7f9',
     autoHideMenuBar: true,
     icon: process.platform === 'linux' ? join(assets(), 'icon.png') : undefined,
     webPreferences: {

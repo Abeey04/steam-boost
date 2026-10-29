@@ -104,9 +104,18 @@ export function averageSpeeds(samples: readonly Sample[], seconds: number): Reco
   return sums
 }
 
-const PALETTE = ['#4cc2ff', '#ffa94d', '#c58bff', '#ff7eb6', '#2fd3b5', '#f5d04c']
+/** Each kind's colour, as on the website and in the logo: Wi-Fi blue, a phone orange, Ethernet
+ * purple (docs/theme.css). */
+const KIND_COLORS: Partial<Record<NetworkView['kind'], string>> = {
+  wifi: 'var(--wifi)',
+  usb: 'var(--phone)',
+  ethernet: 'var(--ethernet)'
+}
+/** For a second network of a kind, and kinds without a colour of their own (styles.css). */
+const EXTRA_COLORS = ['var(--teal)', 'var(--pink)', 'var(--gold)']
 
-/** A colour per network that stays put for the session: given out in the order they're seen. */
+/** A colour per network that stays put for the session: its kind's, unless a network seen
+ * earlier has that one, and then the first spare. */
 export function useNetworkColors(networks: NetworkView[]): {
   colorOf: (id: string) => string
   /** The order they were first seen in, for anything that should keep it (the chart's bands). */
@@ -114,13 +123,24 @@ export function useNetworkColors(networks: NetworkView[]): {
 } {
   const assigned = useRef(new Map<string, string>())
   for (const network of networks) {
-    if (!assigned.current.has(network.id)) {
-      assigned.current.set(network.id, PALETTE[assigned.current.size % PALETTE.length])
-    }
+    if (assigned.current.has(network.id)) continue
+    const taken = new Set(assigned.current.values())
+    const free = [KIND_COLORS[network.kind], ...EXTRA_COLORS].find(
+      (color) => color !== undefined && !taken.has(color)
+    )
+    assigned.current.set(
+      network.id,
+      free ?? EXTRA_COLORS[assigned.current.size % EXTRA_COLORS.length]
+    )
   }
-  const colorOf = useCallback((id: string) => assigned.current.get(id) ?? PALETTE[0], [])
+  const colorOf = useCallback((id: string) => assigned.current.get(id) ?? EXTRA_COLORS[0], [])
   const rankOf = useCallback((id: string) => [...assigned.current.keys()].indexOf(id), [])
   return { colorOf, rankOf }
+}
+
+/** Sets --c, the colour styles.css draws a connection's marks in, on an element. */
+export function colorStyle(color: string): React.CSSProperties {
+  return { '--c': color } as React.CSSProperties
 }
 
 /** A value kept in localStorage: only for this window's own conveniences (the speed unit). */

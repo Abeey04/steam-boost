@@ -30,7 +30,9 @@ export function SetupCard({ state }: { state: AppState }): React.JSX.Element | n
   if (!expanded) {
     return (
       <section className="card setup-done">
-        <CheckIcon size={16} />
+        <span className="step-mark" aria-hidden>
+          <CheckIcon size={14} />
+        </span>
         <span>Set up. Steam is using Steam Boost.</span>
         <button type="button" className="link" onClick={() => setExpanded(true)}>
           Details

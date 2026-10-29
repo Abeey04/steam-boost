@@ -1,4 +1,4 @@
-import { averageSpeeds, type Sample } from '../api'
+import { averageSpeeds, colorStyle, type Sample } from '../api'
 import { formatBytes, formatSpeed, phaseOf, speedText, type Phase, type SpeedUnit } from '../format'
 import type { AppState } from '../types'
 import { SpeedChart } from './SpeedChart'
@@ -92,7 +92,10 @@ export function Hero({
       {parts.length > 0 && (
         <div className="share-bar" aria-hidden>
           {parts.map(({ network, speed: carried }) => (
-            <span key={network.id} style={{ flexGrow: carried, background: colorOf(network.id) }} />
+            <span
+              key={network.id}
+              style={{ ...colorStyle(colorOf(network.id)), flexGrow: carried }}
+            />
           ))}
         </div>
       )}
@@ -103,8 +106,8 @@ export function Hero({
           </span>
         ) : (
           parts.map(({ network, speed: carried }) => (
-            <span key={network.id} className="legend-item">
-              <span className="swatch" style={{ background: colorOf(network.id) }} />
+            <span key={network.id} className="legend-item" style={colorStyle(colorOf(network.id))}>
+              <span className="swatch" />
               {network.label}
               <span className="legend-speed">
                 {speedText(network.speedBytesPerSec, unit)}

@@ -137,9 +137,10 @@ Terminal and open it again.
 
 `docs/` is the website: plain HTML and CSS, with download links straight to the latest release's
 files, which `site.js` swaps for the exact ones when GitHub's API answers. Its look (the
-typeface, colours and buttons) is `theme.css`, kept apart from the page layout in `styles.css`
-so the app can share it. GitHub Pages serves it at https://abeey04.github.io/steam-boost/ with the repository's Settings › Pages set to
-**Deploy from a branch**, branch `main`, folder `/docs`.
+typeface, colours and buttons) is `theme.css`, kept apart from the page layout in `styles.css`:
+the app's window imports it too (`src/renderer/styles.css`), so a change there shows in both.
+GitHub Pages serves it at https://abeey04.github.io/steam-boost/ with the repository's Settings ›
+Pages set to **Deploy from a branch**, branch `main`, folder `/docs`.
 
 ### A custom domain, later
 
@@ -166,7 +167,7 @@ See GitHub's guide to [managing a custom domain](https://docs.github.com/en/page
   [steam-lancache-prefill](https://github.com/tpill90/steam-lancache-prefill), for how Steam
   finds and talks to a cache.
 - [Archivo](https://github.com/Omnibus-Type/Archivo) by Omnibus-Type (SIL Open Font License), the
-  website's typeface.
+  typeface of the website and the app.
 
 Steam Boost is not affiliated with Valve Corporation. Steam and the Steam logo are trademarks of
 Valve Corporation.

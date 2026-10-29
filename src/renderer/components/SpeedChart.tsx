@@ -1,4 +1,4 @@
-import { HISTORY_SECONDS, type Sample } from '../api'
+import { colorStyle, HISTORY_SECONDS, type Sample } from '../api'
 import { speedText, type SpeedUnit } from '../format'
 
 // The last minute, each network's speed stacked on the ones below it: the gap between the top
@@ -65,15 +65,9 @@ export function SpeedChart({
         <line className="chart-grid" x1="0" x2={WIDTH} y1={HEIGHT / 2} y2={HEIGHT / 2} />
         <line className="chart-base" x1="0" x2={WIDTH} y1={HEIGHT - 0.5} y2={HEIGHT - 0.5} />
         {bands.map((band) => (
-          <g key={band.id}>
-            <path className="chart-band" d={band.area} fill={colorOf(band.id)} />
-            <path
-              d={band.line}
-              fill="none"
-              stroke={colorOf(band.id)}
-              strokeWidth={1.6}
-              vectorEffect="non-scaling-stroke"
-            />
+          <g key={band.id} style={colorStyle(colorOf(band.id))}>
+            <path className="chart-band" d={band.area} />
+            <path className="chart-edge" d={band.line} />
           </g>
         ))}
       </svg>

@@ -84,10 +84,16 @@ export function SetupGuide({
       }
     })
   }
-  const primary = (label: string, onClick: () => void, disabled = false): React.ReactNode => (
+  /** The card's main button: green, unless a callout above it has the step to take first (a
+   * screen has one green button). */
+  const main = (
+    label: string,
+    onClick: () => void,
+    { disabled = false, quiet = false } = {}
+  ): React.ReactNode => (
     <button
       type="button"
-      className="btn btn-primary btn-wide"
+      className={`btn btn-wide${quiet ? '' : ' btn-primary'}`}
       disabled={busy !== null || disabled}
       onClick={onClick}
     >
@@ -173,8 +179,10 @@ export function SetupGuide({
             ? 'Steam Boost is set up. Steam finds it when it starts.'
             : 'Steam Boost is set up. Steam looks for it only when it starts.',
         body: tryLan,
-        action: primary(steamOff ? 'Start Steam' : 'Restart Steam', () =>
-          pointAndRestart('restart', false)
+        action: main(
+          steamOff ? 'Start Steam' : 'Restart Steam',
+          () => pointAndRestart('restart', false),
+          { quiet: tryLan !== undefined }
         )
       }
     }
@@ -211,10 +219,10 @@ export function SetupGuide({
           )}
         </>
       ),
-      action: primary(
+      action: main(
         steamOff ? 'Set up and start Steam' : 'Set up and restart Steam',
         () => pointAndRestart('setup', true),
-        boost.state !== 'on'
+        { disabled: boost.state !== 'on' }
       ),
       fine: `${prompt.once}${steamOff ? '' : ' Steam closes and opens again.'}`
     }
@@ -223,7 +231,7 @@ export function SetupGuide({
   return (
     <section className="card guide">
       <div className="guide-head" aria-live="polite" aria-atomic="true">
-        {view.eyebrow && <div className="guide-eyebrow">{view.eyebrow}</div>}
+        {view.eyebrow && <div className="eyebrow">{view.eyebrow}</div>}
         <h2 className={`guide-title${view.icon === 'alert' ? ' bad' : ''}`}>
           {view.icon === 'spin' && <SpinnerIcon size={16} />}
           {view.icon === 'alert' && <AlertIcon size={16} />}

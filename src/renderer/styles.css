@@ -1,73 +1,40 @@
-/* Steam Boost's window. Dark or light with the system; one column of cards. Every text colour
-   reads at 4.5:1 or better (WCAG AA) on each surface it's used on, in both themes. */
+/* Steam Boost's window, in the website's look: docs/theme.css gives the typeface (Archivo), the
+   colours and the buttons, and this file lays the window out with them. One column of cards,
+   light or dark with the system. Every text colour reads at 4.5:1 or better (WCAG AA) on each
+   surface it's used on, in both themes, and every colour that marks something at 3:1. */
 
+@import '../../docs/theme.css';
+
+/* The window's own colours, beside the theme's. */
 :root {
-  color-scheme: light dark;
-  --bg: #f3f4f6;
-  --panel: #ffffff;
-  --panel-2: #f2f4f7;
-  --line: #e1e4e9;
-  --line-strong: #cfd4db;
-  --text: #13161b;
-  --muted: #5a6370;
-  --faint: #666f7b;
-  --accent: #0f9d58;
-  --accent-strong: #096b3d;
-  --accent-ink: #ffffff;
-  --accent-soft: rgba(15, 157, 88, 0.12);
-  /* A primary button's fill: white on --accent would be too faint in this theme. */
-  --primary: #0b8049;
-  --warn: #9a5c00;
-  --warn-soft: rgba(245, 166, 35, 0.16);
-  --danger: #b93535;
-  --danger-soft: rgba(207, 63, 63, 0.1);
-  --focus: #2f7cf6;
-  --shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.06);
-  --radius: 14px;
+  /* A switch that's off, against the window, a card and its white knob. */
+  --switch-off: #858e9b;
+  /* For a second connection of a kind, and for kinds the theme has no colour for. Marks only,
+     like the theme's --wifi, --phone and --ethernet. */
+  --teal: #0f8f86;
+  --pink: #c8407f;
+  --gold: #a87b00;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0c0e11;
-    --panel: #14171c;
-    --panel-2: #1b1f26;
-    --line: #242931;
-    --line-strong: #323944;
-    --text: #eceef1;
-    --muted: #9aa3ae;
-    --faint: #848c97;
-    --accent: #3ee08f;
-    --accent-strong: #6cf0ad;
-    --accent-ink: #04150c;
-    --accent-soft: rgba(62, 224, 143, 0.12);
-    --primary: #3ee08f;
-    --warn: #f5b84a;
-    --warn-soft: rgba(245, 184, 74, 0.13);
-    --danger: #ff7070;
-    --danger-soft: rgba(255, 112, 112, 0.12);
-    --focus: #6aa8ff;
-    --shadow: none;
+    --switch-off: #5d6775;
+    --teal: #2fd3b5;
+    --pink: #ff7eb6;
+    --gold: #f5d04c;
   }
 }
 
-* {
-  box-sizing: border-box;
+html {
+  background: var(--bg);
+  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-width: thin;
 }
 
-html,
+/* The theme's text is sized for reading a page; the window's for a glance. */
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font:
-    14px/1.45 'Segoe UI Variable Text',
-    'Segoe UI',
-    system-ui,
-    -apple-system,
-    'Helvetica Neue',
-    Roboto,
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 button,
@@ -77,39 +44,41 @@ select {
   color: inherit;
 }
 
-:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
-
 a {
-  color: var(--muted);
-  text-decoration: none;
+  font-weight: 600;
+  text-decoration-line: none;
 }
 
 a:hover {
-  color: var(--text);
-  text-decoration: underline;
+  text-decoration-line: underline;
 }
 
 h2 {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-size: 15px;
+  font-stretch: var(--wide);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.eyebrow {
+  font-size: 11.5px;
 }
 
 .loading {
   display: grid;
   place-items: center;
   height: 100vh;
-  opacity: 0.8;
 }
 
 .app {
   max-width: 560px;
   margin: 0 auto;
-  padding: 14px 16px 18px;
+  padding: 16px 16px 20px;
+}
+
+main {
+  display: grid;
+  gap: 12px;
 }
 
 /* Top bar */
@@ -118,7 +87,11 @@ h2 {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 4px 2px 14px;
+  padding: 2px 2px 16px;
+}
+
+.topbar > svg {
+  flex: none;
 }
 
 .brand {
@@ -127,14 +100,16 @@ h2 {
 }
 
 .brand-name {
-  font-size: 16px;
-  font-weight: 650;
-  letter-spacing: -0.01em;
+  font-size: 16.5px;
+  font-weight: 750;
+  font-stretch: var(--wide);
+  line-height: 1.3;
+  letter-spacing: -0.015em;
 }
 
 .brand-sub {
-  font-size: 12px;
-  color: var(--muted);
+  color: var(--text-2);
+  font-size: 12.5px;
 }
 
 .banner {
@@ -143,18 +118,18 @@ h2 {
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
-  padding: 9px 12px;
-  border-radius: 10px;
-  background: var(--accent-soft);
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--brand-line) 30%, transparent);
+  border-radius: var(--radius-m);
+  background: var(--brand-soft);
   font-size: 13px;
 }
 
 .banner a {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  color: var(--accent-strong);
-  font-weight: 600;
+  gap: 5px;
+  font-weight: 650;
 }
 
 .toast {
@@ -162,11 +137,10 @@ h2 {
   align-items: flex-start;
   gap: 10px;
   margin-bottom: 12px;
-  padding: 10px 12px;
+  padding: 10px 10px 10px 14px;
   border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
-  border-radius: 10px;
+  border-radius: var(--radius-m);
   background: var(--danger-soft);
-  color: var(--text);
   font-size: 13px;
 }
 
@@ -176,65 +150,68 @@ h2 {
 
 .icon-button {
   display: grid;
+  flex: none;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 50%;
   background: transparent;
-  color: var(--muted);
+  color: var(--text-2);
   cursor: pointer;
 }
 
 .icon-button:hover {
-  background: var(--panel-2);
+  background: var(--surface);
   color: var(--text);
 }
 
 /* Cards */
 
 .card {
-  margin-bottom: 12px;
   padding: 16px;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
-  box-shadow: var(--shadow);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
 }
 
 .card-head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  gap: 12px;
   margin-bottom: 12px;
 }
 
 .muted {
-  color: var(--muted);
-  font-size: 12px;
+  color: var(--text-2);
+  font-size: 12.5px;
 }
 
 .fine {
-  margin: 12px 0 0;
-  color: var(--faint);
+  margin-top: 12px;
+  color: var(--text-3);
   font-size: 12px;
 }
 
 .tip {
-  margin: 12px 0 0;
+  margin-top: 12px;
   padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--panel-2);
-  color: var(--muted);
+  border-radius: var(--radius-s);
+  background: var(--surface-2);
+  color: var(--text-2);
   font-size: 12.5px;
 }
 
 .empty {
-  margin: 0;
-  color: var(--muted);
+  color: var(--text-2);
 }
 
-/* Hero: status, speed, chart */
+/* Each connection's marks (chart band, swatch, icon, cap meter) are drawn in --c, which its
+   element sets to the connection's colour (useNetworkColors in api.ts). */
+
+/* Hero: where things stand, the speed, the last minute, the shares */
 
 .hero-status {
   display: flex;
@@ -252,10 +229,10 @@ h2 {
   flex: none;
   max-width: 55%;
   overflow: hidden;
-  padding: 2px 9px;
+  padding: 2px 10px;
   border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent-strong);
+  background: var(--brand-soft);
+  color: var(--brand-text);
   font-size: 12px;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
@@ -267,14 +244,14 @@ h2 {
   flex: none;
   width: 10px;
   height: 10px;
-  margin-top: 5px;
+  margin-top: 6px;
   border-radius: 50%;
-  background: var(--faint);
+  background: var(--text-3);
 }
 
 .dot.tone-good {
-  background: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-soft);
+  background: var(--brand-line);
+  box-shadow: 0 0 0 4px var(--brand-soft);
 }
 
 .dot.tone-wait {
@@ -298,12 +275,13 @@ h2 {
 }
 
 .hero-title {
-  font-size: 15px;
-  font-weight: 650;
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .hero-detail {
-  color: var(--muted);
+  color: var(--text-2);
   font-size: 13px;
 }
 
@@ -311,7 +289,7 @@ h2 {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin: 14px 0 6px;
+  margin: 16px 0 8px;
   padding: 0;
   border: 0;
   background: none;
@@ -321,25 +299,26 @@ h2 {
 
 .speed-value {
   font-size: 46px;
-  font-weight: 650;
+  font-weight: 750;
+  font-stretch: var(--wide);
   line-height: 1;
   letter-spacing: -0.03em;
 }
 
 .speed-unit {
-  color: var(--muted);
-  font-size: 15px;
-  font-weight: 550;
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .phase-off .speed-value {
-  color: var(--faint);
+  color: var(--text-3);
 }
 
 .chart {
   position: relative;
-  height: 132px;
-  margin: 4px -4px 0;
+  height: 128px;
+  margin-top: 4px;
 }
 
 .chart svg {
@@ -351,20 +330,22 @@ h2 {
 .chart-scale {
   position: absolute;
   top: 0;
-  right: 6px;
-  color: var(--faint);
+  right: 2px;
+  color: var(--text-3);
   font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
 
 .chart-band {
-  fill-opacity: 0.24;
+  fill: var(--c);
+  fill-opacity: 0.22;
 }
 
-@media (prefers-color-scheme: dark) {
-  .chart-band {
-    fill-opacity: 0.34;
-  }
+.chart-edge {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
 }
 
 .chart-grid {
@@ -383,19 +364,20 @@ h2 {
   display: flex;
   gap: 3px;
   height: 8px;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 .share-bar span {
   min-width: 4px;
   border-radius: 3px;
+  background: var(--c);
   transition: flex-grow 0.6s ease;
 }
 
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 14px;
+  gap: 6px 16px;
   margin-top: 10px;
   font-size: 12.5px;
 }
@@ -403,29 +385,31 @@ h2 {
 .legend-item {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
 }
 
 .legend-speed {
-  color: var(--muted);
+  color: var(--text-2);
   font-variant-numeric: tabular-nums;
 }
 
 .legend-empty {
-  color: var(--faint);
+  color: var(--text-3);
 }
 
 .swatch {
+  flex: none;
   width: 9px;
   height: 9px;
   border-radius: 3px;
+  background: var(--c);
 }
 
 .hero-foot {
-  margin-top: 12px;
-  padding-top: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
   border-top: 1px solid var(--line);
-  color: var(--faint);
+  color: var(--text-3);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
@@ -435,34 +419,26 @@ h2 {
 .guide {
   display: grid;
   gap: 14px;
+  padding: 20px 18px 18px;
 }
 
 .guide-head {
   display: grid;
-  gap: 4px;
-}
-
-.guide-eyebrow {
-  color: var(--muted);
-  font-size: 11.5px;
-  font-weight: 650;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  gap: 6px;
 }
 
 .guide-title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 18px;
-  font-weight: 650;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
+  gap: 9px;
+  font-size: 19px;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
 }
 
 .guide-title svg {
   flex: none;
-  color: var(--muted);
+  color: var(--text-2);
 }
 
 .guide-title.bad svg {
@@ -470,8 +446,8 @@ h2 {
 }
 
 .guide-text {
-  color: var(--muted);
-  font-size: 13px;
+  color: var(--text-2);
+  font-size: 13.5px;
   overflow-wrap: anywhere;
 }
 
@@ -491,10 +467,10 @@ h2 {
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px 4px 8px;
+  gap: 7px;
+  padding: 5px 12px 5px 10px;
   border-radius: 999px;
-  background: var(--panel-2);
+  background: var(--surface-2);
   font-size: 12.5px;
   font-weight: 600;
 }
@@ -503,28 +479,22 @@ h2 {
   display: inline-flex;
 }
 
-/* .btn comes later, so this needs the extra class to win. */
-.btn.btn-wide {
-  width: 100%;
-  min-height: 38px;
-  font-size: 14px;
-}
-
 .guide-fine {
-  margin: -6px 0 0;
-  color: var(--faint);
+  margin-top: -6px;
+  color: var(--text-3);
   font-size: 12px;
+  text-align: center;
 }
 
 .callout {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: 10px;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-s);
   background: var(--warn-soft);
-  font-size: 12.5px;
+  font-size: 13px;
 }
 
 /* Set up: one line once it works, opening to the three things that make it work */
@@ -532,20 +502,18 @@ h2 {
 .setup-done {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 11px 14px;
-  color: var(--accent-strong);
-  font-size: 13px;
+  gap: 10px;
+  padding: 12px 16px;
 }
 
-.setup-done span {
+.setup-done > span:not(.step-mark) {
   flex: 1;
-  color: var(--text);
+  min-width: 0;
+  font-size: 13.5px;
 }
 
 .steps {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 14px;
   margin: 0;
   padding: 0;
@@ -561,79 +529,69 @@ h2 {
 
 .step-mark {
   display: grid;
+  flex: none;
   place-items: center;
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--accent-soft);
-  color: var(--accent-strong);
+  background: var(--brand-soft);
+  color: var(--brand-text);
 }
 
 .step-title {
-  font-weight: 600;
+  font-weight: 650;
   line-height: 24px;
 }
 
 .step-detail {
-  color: var(--muted);
+  color: var(--text-2);
   font-size: 12.5px;
   overflow-wrap: anywhere;
 }
 
-/* Buttons and switches */
+/* Buttons and switches: the theme's buttons, at the window's size */
 
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   gap: 6px;
-  min-height: 30px;
-  padding: 0 12px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  background: var(--panel-2);
-  font-size: 13px;
-  font-weight: 550;
+  min-height: 34px;
+  padding: 0 15px;
+  font-size: 13.5px;
   white-space: nowrap;
-  cursor: pointer;
-}
-
-.btn:hover:not(:disabled) {
-  border-color: var(--faint);
 }
 
 .btn:disabled {
   opacity: 0.5;
   cursor: default;
+  pointer-events: none;
 }
 
-.btn-primary {
-  border-color: transparent;
-  background: var(--primary);
-  color: var(--accent-ink);
-}
-
-.btn-primary:hover:not(:disabled) {
-  border-color: transparent;
-  background: var(--accent-strong);
+.btn.btn-wide {
+  width: 100%;
+  min-height: 44px;
+  font-size: 15px;
 }
 
 .btn-danger {
   color: var(--danger);
 }
 
+.btn-danger:hover {
+  border-color: var(--danger);
+}
+
 .link {
   padding: 0;
   border: 0;
   background: none;
-  color: var(--accent-strong);
+  color: var(--brand-text);
   font-size: 12.5px;
-  font-weight: 550;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .link:hover {
   text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .switch {
@@ -642,7 +600,7 @@ h2 {
   padding: 0;
   border: 0;
   border-radius: 999px;
-  background: var(--line-strong);
+  background: var(--switch-off);
   cursor: pointer;
   transition: background 0.15s ease;
 }
@@ -652,13 +610,20 @@ h2 {
   top: 3px;
   left: 3px;
   border-radius: 50%;
-  background: #fff;
+  background: #ffffff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-  transition: transform 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
 }
 
 .switch.on {
-  background: var(--accent);
+  background: var(--brand-line);
+}
+
+/* White on green in the light theme; in the dark one, where the green is bright, near-black. */
+.switch.on .knob {
+  background: var(--brand-ink);
 }
 
 .switch:disabled {
@@ -718,45 +683,47 @@ h2 {
 
 .network {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
   gap: 2px 12px;
   padding: 12px 16px;
   border-top: 1px solid var(--line);
 }
 
 .network:first-child {
-  border-top: 0;
   padding-top: 4px;
+  border-top: 0;
 }
 
 .net-icon {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
-  background: var(--panel-2);
+  background: var(--surface-2);
+  color: var(--c);
 }
 
 .net-name {
   overflow: hidden;
-  font-weight: 600;
+  font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.net-meta,
-.net-usage {
-  color: var(--muted);
+.net-meta {
+  color: var(--text-3);
   font-size: 12px;
-  font-variant-numeric: tabular-nums;
 }
 
 .net-usage {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px 10px;
+  gap: 2px 12px;
   margin-top: 2px;
+  color: var(--text-2);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .net-side {
@@ -768,13 +735,13 @@ h2 {
 
 .net-activity {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 650;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .net-activity.live {
-  color: var(--accent-strong);
+  color: var(--brand-text);
 }
 
 .net-activity.warn {
@@ -782,30 +749,34 @@ h2 {
 }
 
 .net-activity.muted {
-  color: var(--faint);
+  color: var(--text-3);
   font-weight: 550;
 }
 
-.role-off .net-main,
+/* Switched off, or without internet: greyed, its text still readable and its links usable. */
 .role-off .net-icon,
-.role-no-route .net-main,
 .role-no-route .net-icon {
-  opacity: 0.55;
+  color: var(--text-3);
+}
+
+.role-off .net-name,
+.role-no-route .net-name {
+  color: var(--text-2);
 }
 
 .meter {
   height: 4px;
-  margin-top: 6px;
+  margin-top: 7px;
   overflow: hidden;
   border-radius: 999px;
-  background: var(--panel-2);
+  background: var(--surface-2);
 }
 
 .meter span {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--accent);
+  background: var(--c);
 }
 
 .meter span.near {
@@ -816,55 +787,59 @@ h2 {
   background: var(--danger);
 }
 
+/* Under its row, the row's full width: the label, then the field and its buttons on one line. */
 .cap-editor {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  grid-column: 2 / -1;
+  grid-column: 1 / -1;
   margin-top: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--panel-2);
+  padding: 12px;
+  border-radius: var(--radius-s);
+  background: var(--surface-2);
 }
 
 .cap-label {
+  flex-basis: 100%;
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 650;
 }
 
-.cap-input {
-  width: 70px;
-  height: 30px;
-  padding: 0 8px;
+.cap-input,
+.cap-unit,
+.name-input {
+  height: 34px;
+  padding: 0 10px;
   border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  background: var(--panel);
+  border-radius: var(--radius-s);
+  background: var(--surface);
   font-variant-numeric: tabular-nums;
 }
 
+.cap-input:hover,
+.cap-unit:hover,
+.name-input:hover {
+  border-color: var(--text-3);
+}
+
+.cap-input {
+  width: 72px;
+}
+
 .cap-unit {
-  height: 30px;
   padding: 0 6px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  background: var(--panel);
 }
 
 .name-input {
   flex: 1 1 140px;
   min-width: 0;
-  height: 30px;
-  padding: 0 8px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  background: var(--panel);
 }
 
 .cap-help {
   flex-basis: 100%;
-  margin: 2px 0 0;
-  color: var(--muted);
+  margin-top: 2px;
+  color: var(--text-2);
   font-size: 12px;
 }
 
@@ -883,7 +858,7 @@ h2 {
 }
 
 .settings .chevron {
-  color: var(--muted);
+  color: var(--text-2);
   transition: transform 0.15s ease;
 }
 
@@ -905,11 +880,11 @@ h2 {
 }
 
 .setting-title {
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .setting-detail {
-  color: var(--muted);
+  color: var(--text-2);
   font-size: 12.5px;
 }
 
@@ -917,33 +892,44 @@ h2 {
   display: inline-flex;
   flex: none;
   padding: 3px;
-  border-radius: 9px;
-  background: var(--panel-2);
+  border-radius: 999px;
+  background: var(--surface-2);
 }
 
 .segmented button {
-  padding: 4px 10px;
+  padding: 5px 12px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 999px;
   background: transparent;
-  color: var(--muted);
+  color: var(--text-2);
   font-size: 12.5px;
-  font-weight: 550;
+  font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
 }
 
+.segmented button:disabled {
+  cursor: default;
+}
+
 .segmented button[aria-pressed='true'] {
-  background: var(--panel);
+  background: var(--surface);
   color: var(--text);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.14);
+}
+
+@media (prefers-color-scheme: dark) {
+  /* The card is darker than the track here, so the chosen one is lifted with a lighter grey. */
+  .segmented button[aria-pressed='true'] {
+    background: var(--line-strong);
+  }
 }
 
 .settings-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding-top: 12px;
+  padding-top: 14px;
   border-top: 1px solid var(--line);
 }
 
@@ -953,15 +939,25 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 14px;
-  padding: 4px 2px 0;
-  color: var(--faint);
+  padding: 16px 2px 0;
+  color: var(--text-3);
   font-size: 12px;
+}
+
+.footer a {
+  color: var(--text-3);
+  font-weight: inherit;
+}
+
+.footer a:hover {
+  color: var(--text);
 }
 
 .footer-note {
   margin-left: auto;
 }
 
+/* The theme stops this, and the dot's pulse, for anyone who asks for less motion. */
 .spin {
   animation: spin 0.9s linear infinite;
 }
@@ -969,16 +965,5 @@ h2 {
 @keyframes spin {
   to {
     transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spin,
-  .phase-boosting .dot {
-    animation: none;
-  }
-
-  .share-bar span {
-    transition: none;
   }
 }
