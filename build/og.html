@@ -1,0 +1,173 @@
+<!doctype html>
+<!-- The website's link preview, docs/assets/og.png: the hero's headline beside its drawing of
+     the app, in the site's own stylesheets. To update the image, open this file in Chrome or
+     Edge in the light theme, size the window to 1200×630 (DevTools' device toolbar), and
+     capture a screenshot. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Steam Boost link preview</title>
+    <link rel="stylesheet" href="../docs/theme.css" />
+    <link rel="stylesheet" href="../docs/styles.css" />
+    <style>
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+      }
+
+      .og {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 48px;
+        height: 100%;
+        padding: 0 48px 0 72px;
+      }
+
+      .og-copy {
+        display: grid;
+        gap: 26px;
+      }
+
+      .og-brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 28px;
+        font-weight: 750;
+        font-stretch: var(--wide);
+        letter-spacing: -0.015em;
+      }
+
+      .og h1 {
+        max-width: none;
+        font-size: 56px;
+      }
+
+      .og-sub {
+        color: var(--text-2);
+        font-size: 24px;
+        line-height: 1.4;
+      }
+
+      .og .hero-visual {
+        padding: 28px;
+      }
+
+      .og .window {
+        width: 440px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="og">
+      <div class="og-copy">
+        <div class="og-brand">
+          <img src="../docs/favicon.svg" width="52" height="52" alt="" />Steam Boost
+        </div>
+        <h1>Every connection you have, on one Steam download.</h1>
+        <p class="og-sub">Free and open source, for Windows 10 and 11.</p>
+      </div>
+      <figure class="hero-visual">
+        <div class="window" aria-hidden="true">
+          <div class="window-bar">
+            <span class="window-title">
+              <img src="../docs/favicon.svg" width="16" height="16" alt="" />Steam Boost
+            </span>
+            <span class="window-controls">
+              <span class="min"></span><span class="max"></span><span class="close"></span>
+            </span>
+          </div>
+          <div class="app">
+            <div class="app-top">
+              <div class="app-brand">
+                <b>Steam Boost</b><small>Steam downloads over every connection</small>
+              </div>
+              <span class="app-switch"></span>
+            </div>
+            <div class="app-card">
+              <div class="app-status">
+                <span class="app-dot"></span>
+                <div><b>Boosting</b><small>Steam is downloading over 2 connections.</small></div>
+                <span class="app-gain">+42% on top of Wi-Fi</span>
+              </div>
+              <div class="app-speed"><b>8.4</b><span>MB/s</span></div>
+              <svg class="app-chart" viewBox="0 0 300 84" preserveAspectRatio="none">
+                <line class="grid" x1="0" x2="300" y1="42" y2="42" />
+                <path
+                  class="band k-wifi"
+                  d="M0.0,72.9L10.3,65.5L20.7,60.0L31.0,53.1L41.4,49.0L51.7,46.0L62.1,40.2L72.4,40.1L82.8,38.1L93.1,35.4L103.4,39.7L113.8,40.5L124.1,41.2L134.5,43.2L144.8,38.3L155.2,37.3L165.5,38.1L175.9,36.9L186.2,41.7L196.6,42.7L206.9,40.2L217.2,40.8L227.6,36.8L237.9,36.2L248.3,40.0L258.6,39.6L269.0,42.4L279.3,42.6L289.7,37.8L300.0,38.3L300.0,84.0L0.0,84.0Z"
+                />
+                <path
+                  class="edge k-wifi"
+                  d="M0.0,72.9L10.3,65.5L20.7,60.0L31.0,53.1L41.4,49.0L51.7,46.0L62.1,40.2L72.4,40.1L82.8,38.1L93.1,35.4L103.4,39.7L113.8,40.5L124.1,41.2L134.5,43.2L144.8,38.3L155.2,37.3L165.5,38.1L175.9,36.9L186.2,41.7L196.6,42.7L206.9,40.2L217.2,40.8L227.6,36.8L237.9,36.2L248.3,40.0L258.6,39.6L269.0,42.4L279.3,42.6L289.7,37.8L300.0,38.3"
+                />
+                <path
+                  class="band k-phone"
+                  d="M0.0,67.5L10.3,57.9L20.7,50.2L31.0,42.0L41.4,32.8L51.7,26.6L62.1,20.9L72.4,22.8L82.8,20.0L93.1,14.1L103.4,20.1L113.8,21.8L124.1,24.7L134.5,22.5L144.8,18.2L155.2,17.3L165.5,21.6L175.9,17.9L186.2,21.2L196.6,22.2L206.9,22.3L217.2,23.7L227.6,16.4L237.9,15.8L248.3,20.2L258.6,23.3L269.0,22.9L279.3,22.7L289.7,16.7L300.0,21.3L300.0,38.3L289.7,37.8L279.3,42.6L269.0,42.4L258.6,39.6L248.3,40.0L237.9,36.2L227.6,36.8L217.2,40.8L206.9,40.2L196.6,42.7L186.2,41.7L175.9,36.9L165.5,38.1L155.2,37.3L144.8,38.3L134.5,43.2L124.1,41.2L113.8,40.5L103.4,39.7L93.1,35.4L82.8,38.1L72.4,40.1L62.1,40.2L51.7,46.0L41.4,49.0L31.0,53.1L20.7,60.0L10.3,65.5L0.0,72.9Z"
+                />
+                <path
+                  class="edge k-phone"
+                  d="M0.0,67.5L10.3,57.9L20.7,50.2L31.0,42.0L41.4,32.8L51.7,26.6L62.1,20.9L72.4,22.8L82.8,20.0L93.1,14.1L103.4,20.1L113.8,21.8L124.1,24.7L134.5,22.5L144.8,18.2L155.2,17.3L165.5,21.6L175.9,17.9L186.2,21.2L196.6,22.2L206.9,22.3L217.2,23.7L227.6,16.4L237.9,15.8L248.3,20.2L258.6,23.3L269.0,22.9L279.3,22.7L289.7,16.7L300.0,21.3"
+                />
+              </svg>
+              <div class="app-share">
+                <span class="k-wifi" style="flex: 70"></span>
+                <span class="k-phone" style="flex: 30"></span>
+              </div>
+              <div class="app-legend">
+                <span class="k-wifi"><i></i>Wi-Fi 5.9 MB/s · 70%</span>
+                <span class="k-phone"><i></i>Phone (USB tethering) 2.5 MB/s · 30%</span>
+              </div>
+            </div>
+            <div class="app-card app-list">
+              <div class="app-row">
+                <span class="app-icon k-wifi">
+                  <svg
+                    width="17"
+                    height="17"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.9"
+                    stroke-linecap="round"
+                  >
+                    <path d="M2.5 9.2a14 14 0 0 1 19 0" />
+                    <path d="M5.6 12.6a9.5 9.5 0 0 1 12.8 0" />
+                    <path d="M8.8 15.9a5 5 0 0 1 6.4 0" />
+                    <circle cx="12" cy="19.2" r="0.9" fill="currentColor" stroke="none" />
+                  </svg>
+                </span>
+                <div class="app-row-main"><b>Wi-Fi</b><small>2.3 GB today</small></div>
+                <span class="app-live">5.9 MB/s</span>
+              </div>
+              <div class="app-row">
+                <span class="app-icon k-phone">
+                  <svg
+                    width="17"
+                    height="17"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.9"
+                    stroke-linecap="round"
+                  >
+                    <rect x="7" y="2.5" width="10" height="19" rx="2.2" />
+                    <path d="M11 18.2h2" />
+                  </svg>
+                </span>
+                <div class="app-row-main">
+                  <b>Phone (USB tethering)</b><small>1.4 of 2 GB today</small>
+                  <span class="app-meter"><span style="width: 70%"></span></span>
+                </div>
+                <span class="app-live">2.5 MB/s</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </main>
+  </body>
+</html>

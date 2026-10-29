@@ -111,7 +111,7 @@ Commit `package-lock.json` after the first `npm install`, so every build gets th
 | `src/cli/`                    | `steam-boost-cli`: the engine without the app                                                                                                             |
 | `test/`                       | `node --test` suites; `fixtures.ts` is the mock CDN and the Steam-like client                                                                             |
 | `docs/`                       | The website, served by GitHub Pages                                                                                                                       |
-| `build/`, `resources/`        | Icons (rendered from `build/icon.svg`)                                                                                                                    |
+| `build/`, `resources/`        | Icons (rendered from `build/icon.svg`), and the website's link preview (`build/og.html`)                                                                  |
 
 A development build reads two settings from its environment, which a packaged build ignores:
 `STEAM_BOOST_TEST_NETWORKS="Wi-Fi=127.0.0.2=wifi,Phone=127.0.0.3=usb"` replaces the computer's
