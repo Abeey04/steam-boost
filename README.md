@@ -162,7 +162,8 @@ See GitHub's guide to [managing a custom domain](https://docs.github.com/en/page
 ## Credits
 
 - [Plexo](https://github.com/anmolkapil/plexo) by Anmol Kapil (MIT): the networking code in
-  `src/main/network/` and the idea of splitting downloads across connections.
+  `src/main/network/` and the rate meter in `src/main/steam/meter.ts`, and the idea of splitting
+  downloads across connections.
 - [lancache.net](https://lancache.net), [SteamKit2](https://github.com/SteamRE/SteamKit) and
   [steam-lancache-prefill](https://github.com/tpill90/steam-lancache-prefill), for how Steam
   finds and talks to a cache.
