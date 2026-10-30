@@ -5,16 +5,19 @@ name: Release
 #   npm version 0.2.0 --no-git-tag-version   (or edit "version" in package.json)
 #   git commit -am "Steam Boost 0.2.0" && git tag v0.2.0 && git push origin main v0.2.0
 #
-# Nothing is public until the draft is published from the repository's Releases page. Run by
-# hand (Actions > Release > Run workflow) it's a dry run: the same builds, kept as artifacts, and
-# no release.
+# The draft's notes start with how to check a download: a build attestation for every file, its
+# SHA-256 and, with a VT_API_KEY secret, its VirusTotal scan. Nothing is public until the draft is
+# published from the repository's Releases page. Run by hand (Actions > Release > Run workflow)
+# it's a dry run: the same builds, kept as artifacts, the notes in the run's summary, and no
+# release.
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
 
+# The builds only read the code; the release job asks for what it needs.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -70,16 +73,78 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # the draft release
+      id-token: write # and the attestations, signed with the workflow's own identity
+      attestations: write
     steps:
       - uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
 
+      # A signed record that each file was built by this workflow, from this commit: anyone can
+      # check a download against it with `gh attestation verify <file> -R Abeey04/steam-boost`.
+      - uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: dist/*
+
+      # Only with a VT_API_KEY secret, a free VirusTotal account's API key: each file goes to
+      # VirusTotal, and the notes link its scan. A file VirusTotal doesn't take goes unlinked.
+      - name: Send the files to VirusTotal
+        if: github.event_name == 'push'
+        continue-on-error: true
+        env:
+          VT_API_KEY: ${{ secrets.VT_API_KEY }}
+        run: |
+          if [ -z "$VT_API_KEY" ]; then echo 'No VT_API_KEY secret, so no scans.'; exit 0; fi
+          api=https://www.virustotal.com/api/v3
+          for file in dist/*; do
+            # Installers are over the 32 MB a plain upload takes, so each gets an upload address.
+            if url=$(curl -fsS -H "x-apikey: $VT_API_KEY" "$api/files/upload_url" | jq -er .data) &&
+              curl -fsS -H "x-apikey: $VT_API_KEY" -F "file=@$file" "$url" > /dev/null; then
+              sha256sum "$file" | cut -d' ' -f1 >> "$RUNNER_TEMP/scanned"
+            else
+              echo "::warning::VirusTotal didn't take $file"
+            fi
+            sleep 30 # two requests a file, and the public API takes four a minute
+          done
+
+      # How to check a download, ahead of the notes GitHub generates. A dry run shows it in its
+      # summary.
+      - name: Write the notes
+        run: |
+          cd dist
+          files=(*.exe *.dmg *.AppImage *.deb *.mjs)
+          run="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          scans=''
+          for file in "${files[@]}"; do
+            hash=$(sha256sum "$file" | cut -d' ' -f1)
+            if grep -qsx "$hash" "$RUNNER_TEMP/scanned"; then
+              scans+="${scans:+ · }[$file](https://www.virustotal.com/gui/file/$hash)"
+            fi
+          done
+          {
+            echo '### Checking a download'
+            echo
+            echo "These files were built from this tag by the [Release workflow]($run). To check that one is a file it built, run \`gh attestation verify <file> -R $GITHUB_REPOSITORY\` with the [GitHub CLI](https://cli.github.com)."
+            if [ -n "$scans" ]; then
+              echo
+              echo "VirusTotal's scans: $scans"
+            fi
+            echo
+            echo '### SHA-256'
+            echo
+            echo '```'
+            sha256sum -- "${files[@]}"
+            echo '```'
+          } > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Create a draft release
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
@@ -88,4 +153,5 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --draft \
             --title "Steam Boost ${TAG#v}" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
             --generate-notes
