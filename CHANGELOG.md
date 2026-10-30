@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1
+
+The same app as 0.2.0, with downloads you can check.
+
+- Every file in a release comes with a build attestation: a signed record that this repository's
+  Release workflow built it, from the release's own commit. Check a download against it with
+  `gh attestation verify <file> -R Abeey04/steam-boost`.
+- The release notes say how to check a download, above each file's SHA-256.
+
 ## 0.2.0
 
 The website's look, and a window that opens on what to do next.
