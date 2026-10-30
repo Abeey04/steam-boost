@@ -21,8 +21,9 @@ or your account.
 
 > **Pre-release.** Steam Boost is tested end to end against a simulated Steam (a mock content
 > server and a client that downloads the way Steam does through a cache), and it has worked with
-> the real Steam client on Windows. It's still early: if you try it, a note in the issues saying
-> how it went, working or not, is the most useful thing you can send.
+> the real Steam client on Windows. It's still early: if you try it, a reply in
+> [Speed reports](https://github.com/Abeey04/steam-boost/discussions/2) saying how it went, working
+> or not, is the most useful thing you can send.
 
 ## How it works
 
