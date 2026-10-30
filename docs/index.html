@@ -632,9 +632,11 @@
               in Terminal, then open it again.
             </p>
             <p>
-              Each release lists a SHA-256 checksum for every file, and the source is on
-              <a href="https://github.com/Abeey04/steam-boost">GitHub</a> if you'd rather build it
-              yourself.
+              GitHub builds every release from its source, and the
+              <a href="https://github.com/Abeey04/steam-boost/releases/latest">release notes</a>
+              list each file's SHA-256 and VirusTotal scan, and how to check a download. The source
+              is on <a href="https://github.com/Abeey04/steam-boost">GitHub</a> if you'd rather
+              build it yourself.
             </p>
           </div>
         </div>
@@ -670,6 +672,15 @@
                 To add one line to your hosts file that points Steam's cache name
                 (lancache.steamcontent.com) at your PC. Nothing else needs it, and Undo setup takes
                 the line out again.
+              </p>
+            </details>
+            <details>
+              <summary>Is the download safe?</summary>
+              <p>
+                Steam Boost is open source, and GitHub builds each release from that source, with a
+                signed record of the build that <code>gh attestation verify</code> checks a download
+                against. Each release's notes also link every file's VirusTotal scan. Windows and
+                macOS warn about it only because it isn't code-signed yet.
               </p>
             </details>
             <details>

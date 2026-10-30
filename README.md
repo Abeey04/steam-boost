@@ -66,6 +66,13 @@ check: Steam Boost stops using it once the day's cap is reached and starts again
 Closing the window keeps the boost running in the tray; quit from the tray icon. **Undo setup**
 (in Settings) takes the hosts-file line out again: do that before you uninstall.
 
+### Checking a download
+
+From 0.2.1 on, GitHub builds every release from its tagged source, and the release notes list each
+file's SHA-256 and link its VirusTotal scan. To check that a download is a file the Release
+workflow built, run `gh attestation verify steam-boost-setup.exe -R Abeey04/steam-boost` with the
+[GitHub CLI](https://cli.github.com).
+
 ### If Steam doesn't use it
 
 - **Steam ignores 127.0.0.1.** Some Steam builds may not take a cache on loopback. If Steam has
