@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Steam Boost window playground</title>
+    <link rel="icon" href="data:," />
+    <style>
+      body {
+        margin: 0;
+        padding: 24px;
+        background: #e9ecf1;
+        color: #11151b;
+        font:
+          15px/1.5 system-ui,
+          sans-serif;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 20px;
+      }
+      p {
+        margin: 0 0 20px;
+        color: #4a5462;
+      }
+      .grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+      }
+      figure {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+      }
+      figcaption a {
+        color: inherit;
+        font-weight: 600;
+      }
+      iframe {
+        width: 480px;
+        height: 820px;
+        border: 1px solid #cdd2d9;
+        border-radius: 12px;
+        background: #f6f7f9;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Steam Boost window playground</h1>
+    <p>
+      The built window on made-up data, one state each, in your system's theme. Each opens on its
+      own too, to try at any width. test/ui/mock.js has the data.
+    </p>
+    <div class="grid" id="grid"></div>
+    <script>
+      const scenarios = [
+        ['boosting', 'Downloading a game'],
+        ['ready', 'Set up, nothing downloading'],
+        ['setup', 'First run'],
+        ['restart', 'Restart Steam'],
+        ['lan', 'Steam ignored 127.0.0.1'],
+        ['error', 'Port 80 taken'],
+        ['starting', 'Opening'],
+        ['off', 'Switched off'],
+        ['single', 'One connection'],
+        ['update', 'An update to install']
+      ]
+      const grid = document.getElementById('grid')
+      for (const [name, caption] of scenarios) {
+        const figure = document.createElement('figure')
+        const frame = document.createElement('iframe')
+        frame.src = `/window?scenario=${name}`
+        frame.title = caption
+        const label = document.createElement('figcaption')
+        const link = document.createElement('a')
+        link.href = frame.src
+        link.textContent = caption
+        label.append(link)
+        figure.append(frame, label)
+        grid.append(figure)
+      }
+    </script>
+  </body>
+</html>

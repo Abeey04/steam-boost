@@ -1,5 +1,15 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { once } from 'node:events'
+import {
+  appendFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync
+} from 'node:fs'
+import { createServer, type AddressInfo } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -9,8 +19,10 @@ import type { NetworkInterfaceInfo } from '../src/shared/network'
 import { BoostController } from '../src/main/boostController'
 import { diagnosticsReport } from '../src/main/diagnostics'
 import { listenAddress } from '../src/main/listenAddress'
-import { friendlyName, friendlyNames } from '../src/main/network/names'
+import { friendlyName, friendlyNames, isVirtual } from '../src/main/network/names'
+import { speedReport, systemName } from '../src/main/report'
 import { DEFAULT_SETTINGS, sanitizeSettings, withNetwork, withSettings } from '../src/main/settings'
+import { posixEditScript, windowsEditScript } from '../src/main/steam/elevatedHosts'
 import {
   BEGIN_MARK,
   hasBlock,
@@ -48,9 +60,10 @@ test('settings come back whole from anything, keeping only what makes sense', ()
   assert.equal(read.addressMode, 'lan')
   assert.equal(read.httpsPassthrough, true, 'a wrong type falls back to the default')
   assert.equal(read.startAtLogin, true)
-  // Only what differs from the defaults is kept.
+  // Only what was set and makes sense is kept. On is kept too: a virtual adapter starts off.
   assert.deepEqual(read.networks, {
-    'Ethernet 3': { enabled: false, dailyCapBytes: Math.round(2.4 * MB) }
+    'Ethernet 3': { enabled: false, dailyCapBytes: Math.round(2.4 * MB) },
+    'Wi-Fi': { enabled: true }
   })
   assert.ok(!('extra' in read))
   assert.equal(sanitizeSettings({ addressMode: '10.0.0.1' }).addressMode, 'loopback')
@@ -69,10 +82,14 @@ test('a settings patch changes what it names; network patches set and clear caps
   assert.deepEqual(capped.networks['wifi'], { dailyCapBytes: 5 * MB })
   const off = withNetwork(capped, 'phone', { enabled: false })
   assert.deepEqual(off.networks['phone'], { enabled: false, dailyCapBytes: 100 })
-  const cleared = withNetwork(withNetwork(off, 'phone', { dailyCapBytes: null }), 'phone', {
-    enabled: true
-  })
-  assert.equal(cleared.networks['phone'], undefined, 'back to the defaults: no entry at all')
+  const cleared = withNetwork(off, 'phone', { dailyCapBytes: null })
+  assert.deepEqual(cleared.networks['phone'], { enabled: false })
+  const on = withNetwork(cleared, 'phone', { enabled: true })
+  assert.deepEqual(
+    on.networks['phone'],
+    { enabled: true },
+    'switched on, which a VPN is not by itself'
+  )
 })
 
 test('a network can be given a name of its own, kept to one tidy line', () => {
@@ -107,10 +124,13 @@ test("usage counts each network's day, and starts again at midnight", async () =
     assert.equal(book.add('phone', 300), 300)
     assert.equal(book.add('phone', 200), 500)
     book.add('wifi', 7)
+    book.addSaved(90)
+    book.addSaved(-5)
     await book.save()
     assert.deepEqual(JSON.parse(readFileSync(path, 'utf8')), {
       day: '2026-10-26',
-      bytes: { phone: 500, wifi: 7 }
+      bytes: { phone: 500, wifi: 7 },
+      savedSeconds: 90
     })
 
     // The same day, read back after a restart.
@@ -121,6 +141,7 @@ test("usage counts each network's day, and starts again at midnight", async () =
     assert.equal(again.usedToday('phone'), 0, 'a new day')
     const nextDay = await UsageBook.load(path, () => now)
     assert.equal(nextDay.usedToday('phone'), 0, "yesterday's file isn't today's")
+    assert.equal(nextDay.savedSeconds, 90, 'the time saved never starts again')
     assert.equal(dayKey(new Date(2026, 0, 5)), '2026-01-05')
   } finally {
     rmSync(dir, { recursive: true, force: true })
@@ -226,7 +247,8 @@ test("the update check reads GitHub's latest release", async () => {
   )
   assert.deepEqual(found, {
     version: '0.2.0',
-    url: 'https://github.com/Abeey04/steam-boost/releases/tag/v0.2.0'
+    url: 'https://github.com/Abeey04/steam-boost/releases/tag/v0.2.0',
+    install: null
   })
   assert.equal(await checkForUpdate('0.2.0', reply({ tag_name: 'v0.2.0' })), null)
   assert.equal(await checkForUpdate('0.1.0', reply({}, false)), null)
@@ -333,8 +355,8 @@ function controllerFor(cdnPort: number, settings: { current: AppSettings }) {
     steamDir: async () => null,
     resolveTrigger: async () => null,
     readHosts: async () => hosts,
-    writeHosts: async (text) => {
-      hosts = text
+    editHosts: async (address) => {
+      hosts = address === null ? withoutEntry(hosts) : withEntry(hosts, address)
     },
     engine: {
       httpPort: 0,
@@ -467,7 +489,7 @@ test('before it starts, the controller can say whether the hosts file points Ste
       steamDir: async () => null,
       resolveTrigger: async () => '127.0.0.1',
       readHosts: async () => hosts,
-      writeHosts: async () => undefined
+      editHosts: async () => undefined
     })
   const loopback = unstarted('loopback')
   await loopback.refresh()
@@ -498,7 +520,9 @@ test('diagnostics hold the status, the networks, the hosts line and the logs', (
       speedBytesPerSec: 0,
       sessionBytes: 0,
       requests: { active: 0, waiting: 0, done: 0, failed: 0 },
-      hint: 'try-lan'
+      hint: 'try-lan',
+      download: null,
+      savedSecondsTotal: 0
     },
     networks: [
       {
@@ -507,6 +531,7 @@ test('diagnostics hold the status, the networks, the hosts line and the logs', (
         adapter: 'Ethernet 3',
         customName: null,
         kind: 'usb',
+        virtual: false,
         address: '192.168.42.17',
         role: 'capped',
         enabled: true,
@@ -542,7 +567,6 @@ test('diagnostics hold the status, the networks, the hosts line and the logs', (
 test('after Steam restarts without taking 127.0.0.1, the LAN address is suggested', async () => {
   const cdn = await startMockCdn({ links: {} })
   const steamDir = mkdtempSync(join(tmpdir(), 'steam-boost-steam-'))
-  const { mkdirSync, writeFileSync } = await import('node:fs')
   mkdirSync(join(steamDir, 'logs'))
   // Steam started and logged its downloads, but never enabled a cache.
   writeFileSync(
@@ -561,8 +585,8 @@ test('after Steam restarts without taking 127.0.0.1, the LAN address is suggeste
     steamDir: async () => steamDir,
     resolveTrigger: async () => '127.0.0.1',
     readHosts: async () => hosts,
-    writeHosts: async (text) => {
-      hosts = text
+    editHosts: async (address) => {
+      hosts = address === null ? withoutEntry(hosts) : withEntry(hosts, address)
     },
     engine: { httpPort: 0, tlsPort: null, upstreamHttpPort: cdn.port }
   })
@@ -582,4 +606,323 @@ test('after Steam restarts without taking 127.0.0.1, the LAN address is suggeste
     await cdn.close()
     rmSync(steamDir, { recursive: true, force: true })
   }
+})
+
+// --- Editing the hosts file behind the administrator prompt ------------------------------------
+
+/** Hosts files to edit, and the address to point Steam at (null: take the block out). */
+const HOSTS_CASES: Array<[string, string, string | null]> = [
+  ['Windows line endings', '127.0.0.1 localhost\r\n::1 localhost\r\n', '127.0.0.1'],
+  ['blank lines at the end', '127.0.0.1 localhost\n\n\n', '192.168.1.5'],
+  [
+    'a block of ours, a line after it',
+    `127.0.0.1 localhost\n${BEGIN_MARK}\n127.0.0.1 lancache.steamcontent.com\n# <<< Steam Boost <<<\n\n10.0.0.9 nas\n`,
+    '10.0.0.2'
+  ],
+  [
+    "plexo's block, taken out",
+    '127.0.0.1 localhost\r\n# >>> plexo steam boost >>>\r\n127.0.0.1 lancache.steamcontent.com\r\n# <<< plexo steam boost <<<\r\n',
+    null
+  ],
+  ['an empty file', '', '127.0.0.1'],
+  ['no newline at the end', '127.0.0.1 localhost', null],
+  ['lines of spaces inside', '127.0.0.1 a\n   \n127.0.0.1 b\n  \n', '127.0.0.1']
+]
+
+/** Runs an edit on each case's file and checks it gives what withEntry and withoutEntry do. */
+function checkHostsEdits(run: (path: string, address: string | null) => void): void {
+  const dir = mkdtempSync(join(tmpdir(), 'steam-boost-hosts-'))
+  try {
+    for (const [what, text, address] of HOSTS_CASES) {
+      const path = join(dir, 'hosts')
+      writeFileSync(path, text)
+      run(path, address)
+      const expected = address === null ? withoutEntry(text) : withEntry(text, address)
+      assert.equal(readFileSync(path, 'utf8'), expected, what)
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+}
+
+test(
+  'the elevated edit on Windows changes the hosts file as the app would',
+  { skip: process.platform !== 'win32' && 'PowerShell runs on Windows' },
+  () => {
+    checkHostsEdits((path, address) => {
+      const encoded = Buffer.from(windowsEditScript(path, address), 'utf16le').toString('base64')
+      const { status, stderr } = spawnSync(
+        'powershell.exe',
+        ['-NoProfile', '-NonInteractive', '-EncodedCommand', encoded],
+        { encoding: 'utf8' }
+      )
+      assert.equal(status, 0, stderr)
+    })
+  }
+)
+
+test(
+  'the elevated edit on macOS and Linux changes the hosts file as the app would',
+  { skip: process.platform === 'win32' && 'a POSIX shell runs on macOS and Linux' },
+  () => {
+    checkHostsEdits((path, address) => {
+      const { status, stderr } = spawnSync('/bin/sh', ['-c', posixEditScript(path, address)], {
+        encoding: 'utf8'
+      })
+      assert.equal(status, 0, stderr)
+    })
+  }
+)
+
+test('only an IP address goes into a script that runs as administrator', () => {
+  assert.throws(() => windowsEditScript('hosts', "1.2.3.4'; Remove-Item C:\\"), /isn't an IP/)
+  assert.throws(() => posixEditScript('/etc/hosts', '$(reboot)'), /isn't an IP/)
+})
+
+// --- Virtual adapters ---------------------------------------------------------------------------
+
+test("virtual machines', containers' and VPNs' adapters are told apart, and start off", async () => {
+  const cases: Array<[string, string | undefined, boolean]> = [
+    ['vEthernet (WSL)', 'Hyper-V Virtual Ethernet Adapter', true],
+    ['Ethernet 2', 'TAP-Windows Adapter V9', true],
+    ['VirtualBox Host-Only Network', 'VirtualBox Host-Only Ethernet Adapter', true],
+    ['VMware Network Adapter VMnet8', 'VMware Virtual Ethernet Adapter for VMnet8', true],
+    ['Tailscale', 'Tailscale Tunnel', true],
+    ['ZeroTier One', 'ZeroTier Virtual Port', true],
+    ['utun3', undefined, true],
+    ['wg0', undefined, true],
+    ['docker0', undefined, true],
+    ['Wi-Fi', 'Intel(R) Wi-Fi 6E AX211 160MHz', false],
+    ['Ethernet', 'Realtek PCIe 2.5GbE Family Controller', false],
+    ['Ethernet 3', 'Remote NDIS based Internet Sharing Device', false],
+    ['enp0s20f0u1', undefined, false],
+    // A mobile broadband modem is a line of its own.
+    ['ppp0', undefined, false]
+  ]
+  for (const [name, description, virtual] of cases) {
+    assert.equal(isVirtual({ device: name, displayName: name, description }), virtual, name)
+  }
+  // A WSL switch says it's Ethernet; it keeps its own name, and its address is the last listened on.
+  const wsl: NetworkInterfaceInfo = {
+    ...network('vEthernet (WSL)', '172.20.0.1', 'ethernet'),
+    description: 'Hyper-V Virtual Ethernet Adapter',
+    virtual: true
+  }
+  assert.equal(friendlyName(wsl), 'vEthernet (WSL)')
+  assert.equal(
+    listenAddress('lan', [wsl, network('Wi-Fi', '192.168.1.5', 'wifi')], null),
+    '192.168.1.5'
+  )
+
+  const vpn: NetworkInterfaceInfo = { ...loopbackNetwork('vpn', '127.0.0.4'), virtual: true }
+  const settings = { current: { ...DEFAULT_SETTINGS } }
+  const controller = new BoostController({
+    settings: () => settings.current,
+    usage: new UsageBook(null),
+    networks: () => [fibre, vpn],
+    onChange: () => undefined,
+    log: () => undefined,
+    defaultRoutes: async () => null,
+    steamRunning: async () => false,
+    steamDir: async () => null,
+    resolveTrigger: async () => null,
+    readHosts: async () => '',
+    editHosts: async () => undefined
+  })
+  await controller.refresh()
+  const view = () => controller.current.networks.find((n) => n.id === 'vpn')
+  assert.equal(view()?.virtual, true)
+  assert.equal(view()?.enabled, false)
+  assert.equal(view()?.role, 'off')
+  settings.current = withNetwork(settings.current, 'vpn', { enabled: true })
+  await controller.refresh()
+  assert.equal(view()?.role, 'active', 'on once switched on')
+})
+
+// --- A port that's taken -------------------------------------------------------------------------
+
+test('when another program has the port, the window says which one, and what to do', async () => {
+  const blocker = createServer().listen(0, '127.0.0.1')
+  await once(blocker, 'listening')
+  const port = (blocker.address() as AddressInfo).port
+  let asked = 0
+  const controller = new BoostController({
+    settings: () => DEFAULT_SETTINGS,
+    usage: new UsageBook(null),
+    networks: () => [fibre],
+    onChange: () => undefined,
+    log: () => undefined,
+    defaultRoutes: async () => null,
+    steamRunning: async () => false,
+    steamDir: async () => null,
+    resolveTrigger: async () => null,
+    readHosts: async () => '',
+    editHosts: async () => undefined,
+    portOwner: async (taken) => {
+      asked++
+      assert.equal(taken, port)
+      return { pid: 4242, process: 'httpd', service: null, serviceName: null }
+    },
+    engine: { httpPort: port, tlsPort: null }
+  })
+  try {
+    await controller.start()
+    assert.equal(controller.current.boost.state, 'error')
+    assert.match(
+      controller.current.boost.error ?? '',
+      new RegExp(`^Apache \\(httpd\\) is using port ${port}`)
+    )
+    // Trying again soon after doesn't look the program up again.
+    await controller.apply(true)
+    assert.equal(asked, 1)
+    assert.match(controller.current.boost.error ?? '', /Apache/)
+  } finally {
+    await controller.stop()
+    blocker.close()
+  }
+})
+
+// --- The game, and the time saved ----------------------------------------------------------------
+
+test('the game Steam is downloading is named and followed, and the time saved counted', async (t) => {
+  const cdn = await startMockCdn({
+    links: {
+      '127.0.0.2': { bytesPerSec: 6 * MB, latencyMs: 10 },
+      '127.0.0.3': { bytesPerSec: 3 * MB, latencyMs: 10 }
+    }
+  })
+  const steamDir = mkdtempSync(join(tmpdir(), 'steam-boost-steam-'))
+  mkdirSync(join(steamDir, 'logs'))
+  mkdirSync(join(steamDir, 'steamapps'))
+  const total = 400 * MB
+  writeFileSync(
+    join(steamDir, 'steamapps', 'appmanifest_570.acf'),
+    `"AppState"\n{\n\t"appid"\t\t"570"\n\t"name"\t\t"Dota 2"\n\t"BytesToDownload"\t\t"${total}"\n\t"BytesDownloaded"\t\t"0"\n}\n`
+  )
+  const log = join(steamDir, 'logs', 'content_log.txt')
+  writeFileSync(
+    log,
+    `[2026-10-29 10:00:00] AppID 570 update started : download 0/${total}, store 0/0, reuse 0/0, delta 0/0, stage 0/0\n` +
+      '[2026-10-29 10:00:00] AppID 570 App update changed : Running Update,Downloading,\n'
+  )
+  const usage = new UsageBook(null)
+  const controller = new BoostController({
+    settings: () => DEFAULT_SETTINGS,
+    usage,
+    networks: () => [fibre, phone],
+    onChange: () => undefined,
+    log: () => undefined,
+    defaultRoutes: async () => null,
+    steamRunning: async () => true,
+    steamDir: async () => steamDir,
+    resolveTrigger: async () => null,
+    readHosts: async () => '',
+    editHosts: async () => undefined,
+    engine: {
+      httpPort: 0,
+      tlsPort: null,
+      upstreamHttpPort: cdn.port,
+      resolveHost: async () => [{ address: '127.0.0.1', family: 4 }],
+      stallTimeoutMs: 1500
+    }
+  })
+  try {
+    await controller.start()
+    const port = Number(controller.listening()!.http!.split(':').pop())
+    const result = await runSteamClient({ port, ids: cdn.ids, seconds: 5 })
+    await controller.refresh()
+    const { download } = controller.current.boost
+    t.diagnostic(
+      `carried ${(result.bytes / MB).toFixed(0)} MB, ${download?.downloadedBytes} of ${download?.totalBytes}; saved ${usage.savedSeconds.toFixed(2)} s`
+    )
+    assert.equal(download?.appId, 570)
+    assert.equal(download?.name, 'Dota 2')
+    assert.equal(download?.totalBytes, total)
+    assert.ok(download.downloadedBytes > 0 && download.downloadedBytes <= total)
+    // Both connections carried at once: Wi-Fi alone would have taken longer.
+    assert.ok(usage.savedSeconds > 0, `saved ${usage.savedSeconds}`)
+
+    appendFileSync(log, '[2026-10-29 10:05:00] AppID 570 App update changed : None\n')
+    await controller.refresh()
+    assert.equal(controller.current.boost.download, null, 'done, or paused: no game')
+  } finally {
+    await controller.stop()
+    await cdn.close()
+    rmSync(steamDir, { recursive: true, force: true })
+  }
+})
+
+// --- Tell us how it went -------------------------------------------------------------------------
+
+test('"Tell us how it went" fills in a speed report, without addresses', () => {
+  const view = (
+    id: string,
+    label: string,
+    address: string,
+    speedBytesPerSec = 0
+  ): AppState['networks'][number] => ({
+    id,
+    label,
+    adapter: id,
+    customName: null,
+    kind: 'wifi',
+    virtual: false,
+    address,
+    role: 'active',
+    enabled: true,
+    dailyCapBytes: null,
+    usedTodayBytes: 0,
+    speedBytesPerSec,
+    inflight: 0,
+    resting: false
+  })
+  const state: AppState = {
+    version: '0.2.2',
+    platform: 'win32',
+    settings: DEFAULT_SETTINGS,
+    boost: {
+      state: 'on',
+      address: '127.0.0.1',
+      httpsPassthrough: true,
+      hostsEntry: 'set',
+      resolvesTo: '127.0.0.1',
+      steamUsing: true,
+      steamRunning: true,
+      lastRequestAt: Date.now(),
+      speedBytesPerSec: 0,
+      sessionBytes: 0,
+      requests: { active: 0, waiting: 0, done: 0, failed: 0 },
+      hint: null,
+      download: null,
+      savedSecondsTotal: 75 * 60
+    },
+    networks: [
+      view('Wi-Fi', 'Wi-Fi', '192.168.1.5', 6.2 * MB),
+      view('Ethernet 3', 'Phone (USB tethering)', '192.168.42.17', 2.5 * MB)
+    ],
+    update: null,
+    canStartAtLogin: true
+  }
+  assert.equal(systemName('win32', '10.0.26200', 'x64'), 'Windows 11 (build 26200, x64)')
+  assert.equal(systemName('win32', '10.0.19045', 'x64'), 'Windows 10 (build 19045, x64)')
+  const report = speedReport(state, systemName('win32', '10.0.26200', 'x64'))
+  assert.equal(
+    report,
+    [
+      '- **Connections:** Wi-Fi + Phone (USB tethering)',
+      '- **Windows version:** Windows 11 (build 26200, x64)',
+      "- **Steam's download speed without and with Steam Boost:** about 6.2 MB/s on Wi-Fi alone, 8.7 MB/s with Steam Boost (as Steam Boost measured them)",
+      '- **Anything that got in the way:** ',
+      '',
+      'Steam Boost 0.2.2, 1 h 15 min saved so far',
+      ''
+    ].join('\n')
+  )
+  assert.ok(!report.includes('192.168'), 'no local address in it')
+  // Nothing downloading: the speeds are for the person to fill in.
+  const idle = {
+    ...state,
+    networks: state.networks.map((network) => ({ ...network, speedBytesPerSec: 0 }))
+  }
+  assert.match(speedReport(idle, 'Linux'), /Steam Boost:\*\* \n/)
 })

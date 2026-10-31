@@ -47,7 +47,8 @@ function sanitizeNetworks(value: unknown): Record<string, NetworkSettings> {
     if (!id || id.length > MAX_ID_LENGTH) continue
     const input = record(raw)
     const entry: NetworkSettings = {}
-    if (input['enabled'] === false) entry.enabled = false
+    // Kept either way: a virtual adapter is off unless it was switched on.
+    if (typeof input['enabled'] === 'boolean') entry.enabled = input['enabled']
     const cap = sanitizeCap(input['dailyCapBytes'])
     if (cap !== undefined) entry.dailyCapBytes = cap
     const name = sanitizeName(input['name'])

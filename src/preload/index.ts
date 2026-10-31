@@ -20,8 +20,11 @@ const api: SteamBoostApi = {
   tearDown: () => ipcRenderer.invoke(IPC.tearDown),
   restartSteam: () => ipcRenderer.invoke(IPC.restartSteam) as Promise<RestartResult>,
   copyDiagnostics: () => ipcRenderer.invoke(IPC.copyDiagnostics),
+  report: () => ipcRenderer.invoke(IPC.report),
   openLogs: () => ipcRenderer.invoke(IPC.openLogs),
-  openUrl: (url) => ipcRenderer.invoke(IPC.openUrl, url)
+  openUrl: (url) => ipcRenderer.invoke(IPC.openUrl, url),
+  gameArt: (appId) => ipcRenderer.invoke(IPC.gameArt, appId) as Promise<string | null>,
+  installUpdate: () => ipcRenderer.invoke(IPC.installUpdate)
 }
 
 contextBridge.exposeInMainWorld('steamBoost', api)

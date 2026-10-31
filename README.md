@@ -58,13 +58,16 @@ it names, over one of the connections, the way LANCache does.
 2. **Open Steam Boost.** It opens on the one thing to do: click **Set up and restart Steam** and
    approve the administrator prompt. Steam Boost adds its line to your hosts file, then restarts
    Steam, which only looks for a cache as it starts.
-3. **Download something in Steam.** Each connection's speed shows in the window, and in the chart,
-   with what the others add on top of the fastest.
+3. **Download something in Steam.** The window names the game, with how far along it is, the time
+   left and the time the boost has saved on it. Each connection's speed shows too, and in the
+   chart, with what the others add on top of the fastest.
 
 Give your phone a **daily cap** (Set daily cap, under its connection) to keep your mobile data in
 check: Steam Boost stops using it once the day's cap is reached and starts again at midnight.
-Closing the window keeps the boost running in the tray; quit from the tray icon. **Undo setup**
-(in Settings) takes the hosts-file line out again: do that before you uninstall.
+Adapters for virtual machines, containers and VPNs are listed apart, under Other adapters, and
+stay off unless you switch one on. Closing the window keeps the boost running in the tray; quit
+from the tray icon. **Undo setup** (in Settings) takes the hosts-file line out again, and so does
+uninstalling. On Windows, a new version installs from the window: Update, then Restart to update.
 
 ### Checking a download
 
@@ -79,10 +82,10 @@ workflow built, run `gh attestation verify steam-boost-setup.exe -R Abeey04/stea
   restarted and still sends nothing, the window offers **Use my LAN address**, which listens on
   your PC's LAN address instead, points Steam there and restarts it. The same switch is in
   Settings › Listen on.
-- **Port 80 is taken.** Steam only talks to a cache on port 80. Find what holds it with
-  `netstat -ano | findstr ":80 "` and `tasklist /FI "PID eq <pid>"`; IIS, XAMPP/Apache and old Skype
-  are the usual ones. PID 4 is Windows' own HTTP service: `netsh http show servicestate` shows who
-  registered it.
+- **Port 80 is taken.** Steam only talks to a cache on port 80. The window says which program has
+  it, and what to do: IIS, XAMPP/Apache and old Skype are the usual ones. To look yourself:
+  `netstat -ano | findstr ":80 "` and `tasklist /FI "PID eq <pid>"`. PID 4 is Windows' own HTTP
+  service: `netsh http show servicestate` shows who registered it.
 - **One connection drops when the phone is plugged in.** Windows keeps one internet connection
   by default. To allow both, run this as administrator and restart Windows:
   `reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WcmSvc\GroupPolicy" /v fMinimizeConnections /t REG_DWORD /d 0 /f`
@@ -90,9 +93,11 @@ workflow built, run `gh attestation verify steam-boost-setup.exe -R Abeey04/stea
   for all traffic. Make Wi-Fi the default again with
   `Set-NetIPInterface -InterfaceAlias "Ethernet 3" -InterfaceMetric 500` (the phone's adapter
   name, as administrator). Steam Boost still uses the phone: it binds to each adapter directly.
-- **Something else.** Settings › **Copy diagnostics** puts a report on the clipboard (versions,
-  settings, the hosts-file line, Steam's cache log lines, Steam Boost's log). Paste it into an
-  [issue](https://github.com/Abeey04/steam-boost/issues).
+- **Something else.** Settings › **Tell us how it went** (or Feedback, at the bottom of the
+  window) opens a new [issue](https://github.com/Abeey04/steam-boost/issues) with a summary filled
+  in, and puts the diagnostics on the clipboard to paste into it: versions, settings, the
+  hosts-file line, Steam's cache log lines and Steam Boost's log. They name your connections and
+  their local addresses, so look them over first. **Copy diagnostics** copies them alone.
 
 ## Building it
 
@@ -103,11 +108,14 @@ npm install
 npm run dev          # build, run, and rebuild + restart on every change
 npm test             # the engine against a mock Steam CDN, plus the app's own pieces
 npm run typecheck
-npm run dist:win     # an installer in dist/ (dist:mac, dist:linux on those systems)
+npm run ui           # the window in a browser on made-up data, every state side by side
+npm run test:ui      # each state, light and dark, against its screenshot (in Edge)
+npm run dist:win     # installers in dist/ (dist:mac, dist:linux on those systems)
 npm run build:cli    # out/cli/steam-boost-cli.mjs: the engine as a command-line tool
 ```
 
-Commit `package-lock.json` after the first `npm install`, so every build gets the same versions.
+After a change to the window that's meant to show, `npm run test:ui -- --update-snapshots` takes
+new screenshots (`test/ui/screenshots`): look them over in the diff before committing them.
 
 | Where                         | What                                                                                                                                                      |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -118,6 +126,7 @@ Commit `package-lock.json` after the first `npm install`, so every build gets th
 | `src/renderer/`               | The window (React)                                                                                                                                        |
 | `src/cli/`                    | `steam-boost-cli`: the engine without the app                                                                                                             |
 | `test/`                       | `node --test` suites; `fixtures.ts` is the mock CDN and the Steam-like client                                                                             |
+| `test/ui/`                    | The window's playground (`mock.js` stands in for the app) and its screenshot tests                                                                        |
 | `docs/`                       | The website, served by GitHub Pages                                                                                                                       |
 | `build/`, `resources/`        | Icons (rendered from `build/icon.svg`), and the website's link preview (`build/og.html`)                                                                  |
 
@@ -129,20 +138,37 @@ networks with these, and `STEAM_BOOST_USER_DATA` keeps settings and logs in anot
 
 1. Set the new version in `package.json`, commit, and tag it: `git tag v0.2.0 && git push origin main v0.2.0`.
 2. The Release workflow builds Windows, macOS and Linux and leaves a **draft** release with the
-   installers and `steam-boost-cli.mjs`, each with a build attestation. Its notes start with how
-   to check a download: the files' SHA-256s and, with a `VT_API_KEY` secret (a free
+   installers, `steam-boost-cli.mjs`, and `latest.yml` with the `.blockmap` files, which the
+   app's updater reads, each with a build attestation. Its notes start with how to check a
+   download: the files' SHA-256s and, with a `VT_API_KEY` secret (a free
    [VirusTotal](https://www.virustotal.com) account's API key, in Settings › Secrets and variables
-   › Actions), each file's VirusTotal scan. Write what's new above them.
+   › Actions), each file's VirusTotal scan. Write what's new above them. The run's log shows
+   `latest.yml`: it should list both Windows installers.
 3. Look over the draft and any scans, then publish it as a full release. The website's download
-   buttons and the app's update notice use GitHub's latest release, which skips pre-releases. The
+   buttons and the app's update check use GitHub's latest release, which skips pre-releases. The
    buttons link to each file by name (`releases/latest/download/steam-boost-setup.exe`), so keep
    the names `electron-builder.yml` gives them.
+
+Windows has an installer for each architecture, `steam-boost-setup-x64.exe` and
+`steam-boost-setup-arm64.exe`; the x64 one is also uploaded as `steam-boost-setup.exe`, the name
+links have used from the start. Electron's fuses are set as the app is packaged, so it can't be
+run as a plain Node.js and only runs its own, checked, `app.asar`.
 
 Builds aren't code-signed yet. Windows shows a SmartScreen warning on first run: choose More info,
 then Run anyway. macOS blocks the app the first time it's opened: go to System Settings › Privacy &
 Security and click Open Anyway (macOS 15 no longer offers right-click › Open for this). If macOS
 says the app is damaged, run `xattr -dr com.apple.quarantine "/Applications/Steam Boost.app"` in
 Terminal and open it again.
+
+### Signing, once there's a certificate
+
+[SignPath Foundation](https://signpath.org) signs open-source Windows builds at no cost. It asks for
+an OSI licence (MIT is one), a public repository, builds made by CI (the Release workflow), and a
+code signing policy published with the project, which names who may commit and who approves a
+release. Applying is the owner's to do, at signpath.org/apply. Once accepted, the signing step goes
+between the Windows build and the upload in `release.yml`, using SignPath's GitHub Action, and the
+installer's publisher name goes in `electron-builder.yml` (`win.signtoolOptions.publisherName`), so
+the updater checks it. macOS needs an Apple Developer ID for the same.
 
 ## The website
 

@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises'
+import { arch, release } from 'node:os'
 import { join } from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
 import {
@@ -14,13 +16,17 @@ import {
 import type { AppState, NetworkPatch, SettingsPatch, UpdateInfo } from '../shared/boost'
 import { IPC } from '../shared/ipc'
 import { OPENABLE_PREFIXES, PROJECT } from '../shared/project'
+import { WindowsUpdater } from './autoUpdate'
 import { BoostController } from './boostController'
 import { diagnosticsReport } from './diagnostics'
 import { initLog, log, logDirectory, recentLog } from './logger'
 import { NetworkMonitor } from './network/interfaces'
+import { speedReport, systemName } from './report'
 import { SettingsStore, withNetwork, withSettings } from './settings'
 import { findSteamDir, readContentLogTail } from './steam/contentLog'
-import { BEGIN_MARK, END_MARK, readHostsFile } from './steam/hostsFile'
+import { editHostsElevated } from './steam/elevatedHosts'
+import { findGameArt } from './steam/games'
+import { BEGIN_MARK, END_MARK, hasBlock, readHostsFile } from './steam/hostsFile'
 import { TRIGGER_HOST } from './steam/steamHosts'
 import { isSteamRunning, restartSteam } from './steamProcess'
 import { allowTestSeams, usingTestNetworks } from './testSeams'
@@ -34,6 +40,11 @@ import { UsageBook } from './usage'
 const APP_ID = 'app.steamboost.desktop'
 const UPDATE_CHECK_MS = 12 * 60 * 60 * 1000
 const USAGE_SAVE_MS = 15_000
+/** What the uninstaller runs this app with (build/installer.nsh): take our line out of the hosts
+ * file, as Undo setup does, then quit, without a window, a tray icon or the boost. */
+const REMOVE_HOSTS_LINE = '--remove-hosts-line'
+/** The biggest game art handed to the window: Steam's headers are tens of kilobytes. */
+const MAX_ART_BYTES = 2 * 1024 * 1024
 
 if (!app.isPackaged) {
   // A development build takes test settings from its environment (testSeams.ts); a packaged one
@@ -49,11 +60,15 @@ let controller: BoostController | null = null
 let window: BrowserWindow | null = null
 let tray: AppTray | null = null
 let update: UpdateInfo | null = null
+let updater: WindowsUpdater | null = null
+let steamDir: Promise<string | null> | null = null
 let quitting = false
 let cleanedUp = false
 let trayNoticeShown = false
 
-if (!app.requestSingleInstanceLock()) {
+if (process.argv.includes(REMOVE_HOSTS_LINE)) {
+  void app.whenReady().then(removeHostsLineAndQuit)
+} else if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
   app.on('second-instance', () => showWindow())
@@ -61,6 +76,21 @@ if (!app.requestSingleInstanceLock()) {
     log('failed to start:', error)
     app.quit()
   })
+}
+
+/** For the uninstaller: the hosts-file line out, behind the administrator prompt only when it's
+ * there. Never fails the uninstall: anything that goes wrong is logged and left. */
+async function removeHostsLineAndQuit(): Promise<void> {
+  initLog(join(app.getPath('userData'), 'logs'))
+  try {
+    if (hasBlock(await readHostsFile())) {
+      await editHostsElevated(null)
+      log('uninstalling: took the line out of the hosts file')
+    }
+  } catch (error) {
+    log(`uninstalling: couldn't take the line out of the hosts file: ${String(error)}`)
+  }
+  app.exit(0)
 }
 
 function assets(): string {
@@ -182,6 +212,23 @@ function registerIpc(store: SettingsStore, boost: BoostController): void {
   ipcMain.handle(IPC.copyDiagnostics, async () => {
     clipboard.writeText(await collectDiagnostics())
   })
+  ipcMain.handle(IPC.report, async () => {
+    const state = currentState()
+    if (state)
+      clipboard.writeText(speedReport(state, systemName(process.platform, release(), arch())))
+    await shell.openExternal(PROJECT.speedReports)
+  })
+  ipcMain.handle(IPC.gameArt, async (_event, appId: unknown) => {
+    if (typeof appId !== 'number' || !Number.isInteger(appId) || appId <= 0) return null
+    steamDir ??= findSteamDir().catch(() => null)
+    const dir = await steamDir
+    const path = dir ? await findGameArt(dir, appId) : null
+    if (!path) return null
+    const data = await readFile(path).catch(() => null)
+    if (!data || data.length > MAX_ART_BYTES) return null
+    return `data:${path.endsWith('.png') ? 'image/png' : 'image/jpeg'};base64,${data.toString('base64')}`
+  })
+  ipcMain.handle(IPC.installUpdate, () => installUpdate())
   ipcMain.handle(IPC.openLogs, async () => {
     const dir = logDirectory()
     if (dir) await shell.openPath(dir)
@@ -280,12 +327,64 @@ function applyLoginItem(openAtLogin: boolean): void {
 
 async function lookForUpdate(): Promise<void> {
   if (!app.isPackaged) return
+  // Once one is downloading or downloaded, that's the one.
+  if (update?.install === 'downloading' || update?.install === 'ready') return
+  if (process.platform === 'win32') {
+    try {
+      updater ??= new WindowsUpdater(log, (progress) => {
+        if (update?.install !== 'downloading') return
+        update = { ...update, progress }
+        broadcast()
+      })
+      const installable = await updater.check(app.getVersion())
+      if (installable) {
+        log(`update available: ${installable.version}, installable from the window`)
+        update = {
+          version: installable.version,
+          url: `${PROJECT.github}/releases/tag/v${installable.version}`,
+          install: 'available'
+        }
+        broadcast()
+        return
+      }
+    } catch (error) {
+      // An older release has no latest.yml to read, say: the page link is still offered.
+      log(`installable update check failed: ${String(error)}`)
+    }
+  }
   try {
     update = await checkForUpdate(app.getVersion())
     if (update) log(`update available: ${update.version}`)
     broadcast()
   } catch (error) {
     log(`update check failed: ${String(error)}`)
+  }
+}
+
+/** The window's Update button: downloads the update, then (clicked again) installs it. */
+async function installUpdate(): Promise<void> {
+  if (!update || !updater) return
+  if (update.install === 'ready') {
+    log(`installing ${update.version}`)
+    quitting = true
+    updater.installNow()
+    return
+  }
+  if (update.install !== 'available') return
+  update = { ...update, install: 'downloading', progress: 0 }
+  broadcast()
+  try {
+    await updater.download()
+    update = { ...update, install: 'ready', progress: 1 }
+    log(`downloaded ${update.version}`)
+  } catch (error) {
+    log(`update download failed: ${String(error)}`)
+    update = { ...update, install: null, progress: undefined }
+    throw new Error("Couldn't download the update. Download it from the release page instead.", {
+      cause: error
+    })
+  } finally {
+    broadcast()
   }
 }
 

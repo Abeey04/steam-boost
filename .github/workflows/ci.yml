@@ -38,3 +38,30 @@ jobs:
 
       - name: Build
         run: npm run build && npm run build:cli
+
+  # The window in every state, light and dark, against test/ui/screenshots: in Microsoft Edge, as
+  # Windows has it, which is what the screenshots were taken in.
+  window:
+    name: Window screenshots (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Compare every state with its screenshot
+        run: npm run test:ui
+
+      # What differed, and how: each failed state's screenshot, the one expected, and the two
+      # overlaid.
+      - name: Keep the differences
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: window-differences
+          path: out/ui-results

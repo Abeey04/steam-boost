@@ -22,5 +22,7 @@ export interface NetworkInterfaceInfo {
   description?: string
   addresses: NetworkAddress[]
   kind: NetworkInterfaceKind
+  /** For a virtual machine, a container or a VPN (main/network/names.ts): off until switched on. */
+  virtual?: boolean
   mac?: string
 }

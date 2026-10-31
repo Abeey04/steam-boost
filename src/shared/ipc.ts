@@ -11,6 +11,9 @@ export const IPC = {
   tearDown: 'hosts:tear-down',
   restartSteam: 'steam:restart',
   copyDiagnostics: 'diagnostics:copy',
+  report: 'report:open',
   openLogs: 'logs:open',
-  openUrl: 'url:open'
+  openUrl: 'url:open',
+  gameArt: 'game:art',
+  installUpdate: 'update:install'
 } as const

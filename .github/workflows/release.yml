@@ -61,6 +61,24 @@ jobs:
         if: runner.os == 'Linux'
         run: npm run build:cli && cp out/cli/steam-boost-cli.mjs dist/
 
+      # Releases up to 0.2.1 had one installer, steam-boost-setup.exe, and links to it are about:
+      # under that name, the x64 one (most Windows PCs). The updater reads latest.yml instead.
+      - name: Keep the x64 installer's old name too
+        if: runner.os == 'Windows'
+        shell: bash
+        run: cp dist/steam-boost-setup-x64.exe dist/steam-boost-setup.exe
+
+      # In the log: every file and the update feed, so a release can be checked before it's
+      # published (latest.yml must list each Windows installer with its architecture in the name).
+      - name: Show what was built
+        shell: bash
+        run: |
+          ls -l dist
+          for feed in dist/latest*.yml; do [ -f "$feed" ] && { echo "== $feed"; cat "$feed"; }; done
+          if [ -f dist/win-unpacked/resources/app-update.yml ]; then cat dist/win-unpacked/resources/app-update.yml; fi
+
+      # latest.yml and the .blockmap files are what the app's updater reads (src/main/autoUpdate.ts):
+      # the installers' sizes and sha512, and blocks to fetch only what changed.
       - uses: actions/upload-artifact@v4
         with:
           name: dist-${{ runner.os }}
@@ -70,6 +88,8 @@ jobs:
             dist/*.AppImage
             dist/*.deb
             dist/*.mjs
+            dist/latest*.yml
+            dist/*.blockmap
           if-no-files-found: error
 
   release:
@@ -101,7 +121,8 @@ jobs:
         run: |
           if [ -z "$VT_API_KEY" ]; then echo 'No VT_API_KEY secret, so no scans.'; exit 0; fi
           api=https://www.virustotal.com/api/v3
-          for file in dist/*; do
+          # The downloads, not the updater's feed and block maps.
+          for file in dist/*.exe dist/*.dmg dist/*.AppImage dist/*.deb dist/*.mjs; do
             # Installers are over the 32 MB a plain upload takes, so each gets an upload address.
             if url=$(curl -fsS -H "x-apikey: $VT_API_KEY" "$api/files/upload_url" | jq -er .data) &&
               curl -fsS -H "x-apikey: $VT_API_KEY" -F "file=@$file" "$url" > /dev/null; then

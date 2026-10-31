@@ -3,7 +3,7 @@ import { readJson, writeJson } from './jsonStore'
 // What each network has carried today for Steam Boost, so a daily cap (a phone plan's daily data,
 // say) holds across restarts. A day is the computer's own: the counts start again at midnight.
 // Counted as bytes arrive (the engine's `take`), chunks fetched twice included, since a phone
-// plan counts those too.
+// plan counts those too. And the time the boost has saved, all told, which never starts again.
 
 /** The local calendar day of `date`, as YYYY-MM-DD. */
 export function dayKey(date: Date): string {
@@ -14,6 +14,7 @@ export function dayKey(date: Date): string {
 export class UsageBook {
   private day: string
   private readonly bytes = new Map<string, number>()
+  private saved = 0
   private dirty = false
 
   constructor(
@@ -23,10 +24,11 @@ export class UsageBook {
     this.day = dayKey(now())
   }
 
-  /** Today's counts from `path`, if it holds today's. */
+  /** Today's counts from `path`, if it holds today's, and the time saved so far. */
   static async load(path: string, now?: () => Date): Promise<UsageBook> {
     const book = new UsageBook(path, now)
-    const saved = (await readJson(path)) as { day?: unknown; bytes?: unknown } | undefined
+    const saved = (await readJson(path)) as
+      { day?: unknown; bytes?: unknown; savedSeconds?: unknown } | undefined
     if (saved && saved.day === book.day && saved.bytes && typeof saved.bytes === 'object') {
       for (const [id, value] of Object.entries(saved.bytes as Record<string, unknown>)) {
         if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
@@ -34,7 +36,21 @@ export class UsageBook {
         }
       }
     }
+    const seconds = saved?.savedSeconds
+    if (typeof seconds === 'number' && Number.isFinite(seconds) && seconds > 0) book.saved = seconds
     return book
+  }
+
+  /** Counts time the boost saved. */
+  addSaved(seconds: number): void {
+    if (!(seconds > 0)) return
+    this.saved += seconds
+    this.dirty = true
+  }
+
+  /** All the time the boost has saved on this computer. */
+  get savedSeconds(): number {
+    return this.saved
   }
 
   /** Counts `bytes` for network `id`. Returns its total for today. */
@@ -56,7 +72,11 @@ export class UsageBook {
     this.roll()
     if (!this.dirty || !this.path) return
     this.dirty = false
-    await writeJson(this.path, { day: this.day, bytes: Object.fromEntries(this.bytes) })
+    await writeJson(this.path, {
+      day: this.day,
+      bytes: Object.fromEntries(this.bytes),
+      savedSeconds: this.saved
+    })
   }
 
   private roll(): void {

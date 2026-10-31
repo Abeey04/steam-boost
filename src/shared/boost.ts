@@ -47,6 +47,9 @@ export interface NetworkView {
   /** The name it was given here; null: none. */
   customName: string | null
   kind: NetworkInterfaceKind
+  /** A virtual machine's, a container's or a VPN's adapter: off unless switched on, and listed
+   * apart from the connections people plug in. */
+  virtual: boolean
   /** Its IPv4 address, to tell two adapters apart. */
   address: string | null
   role: NetworkRole
@@ -64,7 +67,7 @@ export interface NetworkView {
 export type AddressMode = 'loopback' | 'lan'
 
 export interface NetworkSettings {
-  /** Unset: on. */
+  /** Unset: on, or off for a virtual machine's, a container's or a VPN's adapter. */
   enabled?: boolean
   /** Bytes a day; unset: no cap. */
   dailyCapBytes?: number
@@ -84,6 +87,20 @@ export interface AppSettings {
   startAtLogin: boolean
   /** Closing the window keeps the boost running in the tray. */
   closeToTray: boolean
+}
+
+/** The game Steam is downloading, from Steam's own files (main/steam/games.ts). */
+export interface GameDownload {
+  /** Steam's id for it, which its art is asked for by (SteamBoostApi.gameArt). */
+  appId: number
+  name: string
+  /** How far along it is, as far as can be told: what Steam's manifest says, or what it had when
+   * the download started plus what the boost has carried since, whichever is more. A total of 0:
+   * not known. */
+  downloadedBytes: number
+  totalBytes: number
+  /** The time the other connections have saved on it so far, against the fastest one alone. */
+  savedSeconds: number
 }
 
 /** Something worth suggesting:
@@ -113,11 +130,21 @@ export interface BoostStatus {
   sessionBytes: number
   requests: { active: number; waiting: number; done: number; failed: number }
   hint: Hint
+  /** The game Steam is downloading now; null: none, or it can't be told. */
+  download: GameDownload | null
+  /** All the time the boost has saved, every download on this computer counted. */
+  savedSecondsTotal: number
 }
 
 export interface UpdateInfo {
   version: string
+  /** The release's page, to download it from by hand. */
   url: string
+  /** Where installing it from the window stands, on Windows, where the app can fetch the new
+   * installer and run it itself (main/autoUpdate.ts): available to download, downloading
+   * (`progress` from 0 to 1), ready to install on a restart. Null: only the page link. */
+  install: 'available' | 'downloading' | 'ready' | null
+  progress?: number
 }
 
 export interface AppState {
@@ -165,7 +192,15 @@ export interface SteamBoostApi {
   restartSteam(): Promise<RestartResult>
   /** Puts a report on the clipboard: versions, settings, status, logs. */
   copyDiagnostics(): Promise<void>
+  /** "Tell us how it went": a reply for the Speed reports discussion, filled in from what the app
+   * knows, on the clipboard, and the discussion opened in the browser to paste it into. */
+  report(): Promise<void>
   openLogs(): Promise<void>
   /** Opens one of the project's links in the browser. */
   openUrl(url: string): Promise<void>
+  /** A game's header art from Steam's library cache, as a data: URL; null when there's none. */
+  gameArt(appId: number): Promise<string | null>
+  /** Downloads the update (AppState.update.install 'available'), or once it's 'ready', quits
+   * and installs it. */
+  installUpdate(): Promise<void>
 }

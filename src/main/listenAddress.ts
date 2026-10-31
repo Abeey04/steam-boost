@@ -11,8 +11,9 @@ export function isPrivateV4(address: string): boolean {
 }
 
 /** 127.0.0.1, or for 'lan' this computer's LAN address. A Wi-Fi or Ethernet address goes before
- * a phone's (whose address is gone the moment it's unplugged), and one with a way to the internet
- * before one without. Null when there's no LAN address to be had. */
+ * a phone's (whose address is gone the moment it's unplugged), one with a way to the internet
+ * before one without, and a virtual machine's or VPN's adapter last. Null when there's no LAN
+ * address to be had. */
 export function listenAddress(
   mode: AddressMode,
   networks: NetworkInterfaceInfo[],
@@ -20,6 +21,7 @@ export function listenAddress(
 ): string | null {
   if (mode === 'loopback') return LOOPBACK
   const rank = (iface: NetworkInterfaceInfo): number =>
+    (iface.virtual ? 20 : 0) +
     (routed && !routed.has(iface.id) ? 10 : 0) +
     (iface.kind === 'usb' ? 5 : iface.kind === 'other' ? 3 : 0)
   const candidates = networks

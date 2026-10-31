@@ -2,9 +2,11 @@
 
 export type {
   AppState,
+  GameDownload,
   NetworkPatch,
   NetworkView,
   RestartResult,
-  SettingsPatch
+  SettingsPatch,
+  UpdateInfo
 } from '../shared/boost'
 export type { NetworkInterfaceKind as NetworkInterfaceKindLabel } from '../shared/network'

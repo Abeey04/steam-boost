@@ -14,8 +14,12 @@ export const END_MARK = '# <<< Steam Boost <<<'
 const LEGACY_MARKS: Array<[string, string]> = [
   ['# >>> plexo steam boost >>>', '# <<< plexo steam boost <<<']
 ]
-const BEGIN_MARKS = new Set([BEGIN_MARK, ...LEGACY_MARKS.map(([begin]) => begin)])
-const END_MARKS = new Set([END_MARK, ...LEGACY_MARKS.map(([, end]) => end)])
+/** Every line that opens or closes a block read as ours: the elevated edit (elevatedHosts.ts) and
+ * the uninstaller (build/installer.nsh) take out the same blocks this file does. */
+export const ALL_BEGIN_MARKS = [BEGIN_MARK, ...LEGACY_MARKS.map(([begin]) => begin)]
+export const ALL_END_MARKS = [END_MARK, ...LEGACY_MARKS.map(([, end]) => end)]
+const BEGIN_MARKS = new Set(ALL_BEGIN_MARKS)
+const END_MARKS = new Set(ALL_END_MARKS)
 
 export function hostsFilePath(
   platform: NodeJS.Platform = process.platform,
@@ -82,13 +86,17 @@ export function otherEntries(text: string): string[] {
     .filter((address): address is string => address !== null)
 }
 
+/** Our block's lines, pointing TRIGGER_HOST at `address`. */
+export function blockLines(address: string): string[] {
+  return [BEGIN_MARK, `${address} ${TRIGGER_HOST}`, END_MARK]
+}
+
 /** `text` with our block pointing TRIGGER_HOST at `address`, in place of any block before. */
 export function withEntry(text: string, address: string): string {
   const eol = eolOf(text)
   const { outside } = split(text)
   while (outside.length > 0 && outside[outside.length - 1].trim() === '') outside.pop()
-  const block = [BEGIN_MARK, `${address} ${TRIGGER_HOST}`, END_MARK]
-  return [...outside, ...(outside.length > 0 ? [''] : []), ...block, ''].join(eol)
+  return [...outside, ...(outside.length > 0 ? [''] : []), ...blockLines(address), ''].join(eol)
 }
 
 /** `text` without our block. Everything else is kept as it was. */

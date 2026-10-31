@@ -858,14 +858,29 @@ function listen(server: Server | TcpServer, port: number, address: string): Prom
   })
 }
 
+/** Why a port couldn't be listened on, in words, with the OS's code (EADDRINUSE: another program
+ * has it) and the port, so the app can find out which program that is (portOwner.ts). */
+export class ListenError extends Error {
+  constructor(
+    message: string,
+    readonly code: string | undefined,
+    readonly port: number,
+    options?: ErrorOptions
+  ) {
+    super(message, options)
+  }
+}
+
 function explainListenError(error: NodeJS.ErrnoException, port: number, address: string): Error {
   const where = `${address}:${port}`
   if (error.code === 'EADDRINUSE') {
-    return new Error(
+    return new ListenError(
       `Another program is using ${where}. Steam only looks for a cache on port ${port}, so it has to be free` +
         (process.platform === 'win32'
           ? ' (netstat -ano | findstr :' + port + ' shows which program).'
           : ' (sudo lsof -i :' + port + ' shows which program).'),
+      error.code,
+      port,
       { cause: error }
     )
   }

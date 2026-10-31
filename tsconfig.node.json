@@ -16,5 +16,12 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src/main/**/*", "src/preload/**/*", "src/shared/**/*", "src/cli/**/*", "test/**/*"]
+  "include": [
+    "src/main/**/*",
+    "src/preload/**/*",
+    "src/shared/**/*",
+    "src/cli/**/*",
+    "test/**/*",
+    "playwright.config.ts"
+  ]
 }

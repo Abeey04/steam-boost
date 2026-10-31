@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { api, colorStyle, useAction } from '../api'
 import { formatBytes, speedText, type SpeedUnit } from '../format'
-import { KindIcon } from '../icons'
+import { ChevronIcon, KindIcon } from '../icons'
 import type { NetworkPatch, NetworkView } from '../types'
 import { Switch } from './Switch'
 
@@ -263,8 +263,30 @@ export function NetworkList({
   const { busy, run } = useAction(onError)
   const [editing, setEditing] = useState<{ id: string; editor: Editor } | null>(null)
   const active = networks.filter((network) => network.role === 'active').length
+  // Virtual machines', containers' and VPNs' adapters go in a fold of their own, off unless
+  // switched on: most people never need them, and a VPN would only slow Steam down.
+  const plugged = networks.filter((network) => !network.virtual)
+  const others = networks.filter((network) => network.virtual)
+  const othersOn = others.filter((network) => network.enabled).length
   // Ones switched off or capped are still there to use: the tip is for when there's no second.
-  const usable = networks.filter((network) => network.role !== 'no-route').length
+  const usable = plugged.filter((network) => network.role !== 'no-route').length
+  const rows = (list: NetworkView[]): React.JSX.Element => (
+    <ul className="network-list">
+      {list.map((network) => (
+        <NetworkRow
+          key={network.id}
+          network={network}
+          color={colorOf(network.id)}
+          unit={unit}
+          running={running}
+          editing={editing?.id === network.id ? editing.editor : null}
+          busy={busy === network.id}
+          onEdit={(editor) => setEditing(editor ? { id: network.id, editor } : null)}
+          onChange={(patch) => void run(network.id, () => api().setNetwork(network.id, patch))}
+        />
+      ))}
+    </ul>
+  )
   return (
     <section className="card networks">
       <header className="card-head">
@@ -276,21 +298,24 @@ export function NetworkList({
       {networks.length === 0 ? (
         <p className="empty">Looking for connections…</p>
       ) : (
-        <ul className="network-list">
-          {networks.map((network) => (
-            <NetworkRow
-              key={network.id}
-              network={network}
-              color={colorOf(network.id)}
-              unit={unit}
-              running={running}
-              editing={editing?.id === network.id ? editing.editor : null}
-              busy={busy === network.id}
-              onEdit={(editor) => setEditing(editor ? { id: network.id, editor } : null)}
-              onChange={(patch) => void run(network.id, () => api().setNetwork(network.id, patch))}
-            />
-          ))}
-        </ul>
+        plugged.length > 0 && rows(plugged)
+      )}
+      {others.length > 0 && (
+        <details className="others">
+          <summary>
+            <span className="others-title">Other adapters</span>
+            <span className="muted">
+              {others.length}
+              {othersOn > 0 ? ` · ${othersOn} on` : ''}
+            </span>
+            <ChevronIcon size={16} className="chevron" />
+          </summary>
+          <p className="others-note">
+            For virtual machines, containers and VPNs. Off unless you switch one on: a VPN would
+            slow Steam&apos;s downloads down.
+          </p>
+          {rows(others)}
+        </details>
       )}
       {usable < 2 && networks.length > 0 && (
         <p className="tip">

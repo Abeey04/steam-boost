@@ -3,6 +3,7 @@ import { PROJECT } from '../shared/project'
 import {
   api,
   errorMessage,
+  useAction,
   useAppState,
   useNetworkColors,
   useSpeedHistory,
@@ -16,7 +17,7 @@ import { SetupGuide } from './components/SetupGuide'
 import { Switch } from './components/Switch'
 import { phaseOf, SPEED_UNITS, type Phase, type SpeedUnit } from './format'
 import { CloseIcon, ExternalIcon, Logo } from './icons'
-import type { AppState } from './types'
+import type { AppState, UpdateInfo } from './types'
 
 const SETTING_UP = new Set<Phase>(['starting', 'error', 'elsewhere', 'setup', 'restart'])
 
@@ -30,6 +31,54 @@ function settingUp(state: AppState): boolean {
   return phase === 'starting'
     ? hostsEntry === 'missing' || hostsEntry === 'elsewhere'
     : SETTING_UP.has(phase)
+}
+
+/** A newer version: on Windows the app downloads it and installs it on a restart (two clicks);
+ * elsewhere, a link to the release. */
+function UpdateBanner({
+  update,
+  onError
+}: {
+  update: UpdateInfo
+  onError: (message: string) => void
+}): React.JSX.Element {
+  const { busy, run } = useAction(onError)
+  const install = (): void => void run('install', () => api().installUpdate())
+  if (update.install === 'downloading') {
+    const percent = Math.round((update.progress ?? 0) * 100)
+    return (
+      <div className="banner">
+        <span>
+          Downloading {PROJECT.name} {update.version}… {percent}%
+        </span>
+        <span className="banner-progress" aria-hidden>
+          <span style={{ width: `${percent}%` }} />
+        </span>
+      </div>
+    )
+  }
+  return (
+    <div className="banner">
+      <span>
+        {update.install === 'ready'
+          ? `${PROJECT.name} ${update.version} is ready to install.`
+          : `${PROJECT.name} ${update.version} is out.`}
+      </span>
+      {update.install === 'ready' ? (
+        <button type="button" className="link" disabled={busy !== null} onClick={install}>
+          Restart to update
+        </button>
+      ) : update.install === 'available' ? (
+        <button type="button" className="link" disabled={busy !== null} onClick={install}>
+          Update
+        </button>
+      ) : (
+        <ExternalLink href={update.url}>
+          Download <ExternalIcon size={13} />
+        </ExternalLink>
+      )}
+    </div>
+  )
 }
 
 function ExternalLink({
@@ -86,16 +135,7 @@ export function App(): React.JSX.Element {
 
   return (
     <div className="app">
-      {state.update && (
-        <div className="banner">
-          <span>
-            {PROJECT.name} {state.update.version} is out.
-          </span>
-          <ExternalLink href={state.update.url}>
-            Download <ExternalIcon size={13} />
-          </ExternalLink>
-        </div>
-      )}
+      {state.update && <UpdateBanner update={state.update} onError={showError} />}
       <header className="topbar">
         <Logo size={30} />
         <div className="brand">
@@ -157,6 +197,17 @@ export function App(): React.JSX.Element {
         </span>
         <ExternalLink href={PROJECT.github}>GitHub</ExternalLink>
         <ExternalLink href={PROJECT.site}>Website</ExternalLink>
+        <button
+          type="button"
+          className="footer-link"
+          onClick={() =>
+            void api()
+              .report()
+              .catch((reason: unknown) => setError(errorMessage(reason)))
+          }
+        >
+          Feedback
+        </button>
         <span className="footer-note">Not affiliated with Valve.</span>
       </footer>
     </div>

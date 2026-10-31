@@ -125,9 +125,9 @@ export function useNetworkColors(networks: NetworkView[]): {
   for (const network of networks) {
     if (assigned.current.has(network.id)) continue
     const taken = new Set(assigned.current.values())
-    const free = [KIND_COLORS[network.kind], ...EXTRA_COLORS].find(
-      (color) => color !== undefined && !taken.has(color)
-    )
+    // A WSL switch says it's Ethernet: the colour stays the real Ethernet's.
+    const own = network.virtual ? undefined : KIND_COLORS[network.kind]
+    const free = [own, ...EXTRA_COLORS].find((color) => color !== undefined && !taken.has(color))
     assigned.current.set(
       network.id,
       free ?? EXTRA_COLORS[assigned.current.size % EXTRA_COLORS.length]
@@ -136,6 +136,33 @@ export function useNetworkColors(networks: NetworkView[]): {
   const colorOf = useCallback((id: string) => assigned.current.get(id) ?? EXTRA_COLORS[0], [])
   const rankOf = useCallback((id: string) => [...assigned.current.keys()].indexOf(id), [])
   return { colorOf, rankOf }
+}
+
+/** Each game's art, asked for once per window. */
+const artFor = new Map<number, Promise<string | null>>()
+
+/** The header art Steam keeps for a game, as a data: URL; null while it loads, or if there's
+ * none. */
+export function useGameArt(appId: number | null): string | null {
+  const [art, setArt] = useState<{ appId: number; url: string | null } | null>(null)
+  useEffect(() => {
+    if (appId === null) return
+    let alive = true
+    let pending = artFor.get(appId)
+    if (!pending) {
+      pending = api()
+        .gameArt(appId)
+        .catch(() => null)
+      artFor.set(appId, pending)
+    }
+    void pending.then((url) => {
+      if (alive) setArt({ appId, url })
+    })
+    return () => {
+      alive = false
+    }
+  }, [appId])
+  return art && art.appId === appId ? art.url : null
 }
 
 /** Sets --c, the colour styles.css draws a connection's marks in, on an element. */

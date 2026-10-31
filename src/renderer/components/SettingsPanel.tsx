@@ -105,6 +105,13 @@ export function SettingsPanel({
         <button
           type="button"
           className="btn"
+          onClick={() => void run('report', () => api().report())}
+        >
+          Tell us how it went
+        </button>
+        <button
+          type="button"
+          className="btn"
           onClick={() =>
             void run('copy', async () => {
               await api().copyDiagnostics()
@@ -134,8 +141,10 @@ export function SettingsPanel({
         )}
       </div>
       <p className="fine">
-        Undo setup takes Steam Boost&apos;s line out of your hosts file. Do that before you
-        uninstall.
+        Tell us how it went opens the Speed reports discussion on GitHub, with a reply filled in on
+        your clipboard to paste. If something didn&apos;t work, open an issue and paste in Copy
+        diagnostics. Undo setup takes Steam Boost&apos;s line out of your hosts file; uninstalling
+        does that too.
       </p>
     </details>
   )

@@ -7,8 +7,30 @@ const IPHONE = /iphone|ipad|apple mobile device/i
 /** Android's USB tethering: RNDIS, as Windows describes it, or the newer NCM. */
 const ANDROID = /remote ndis|rndis|internet sharing|android/i
 
+/** Adapters for virtual machines, containers and VPNs, from what Windows calls them (WSL and
+ * Hyper-V switches, VirtualBox, VMware, TAP, WireGuard, Tailscale, ZeroTier, …). */
+const VIRTUAL_DESCRIPTION =
+  /hyper-v|virtualbox|vmware|parallels|docker|wsl|tap-windows|\btap\b|wintun|wireguard|tailscale|zerotier|openvpn|nordlynx|mullvad|proton ?vpn|hamachi|radmin|anyconnect|globalprotect|pangp|fortinet|forticlient|npcap|loopback|virtual (ethernet|adapter|miniport|port)|tunnel|\bvpn\b/i
+/** The same on macOS and Linux, from the device's name: utun0, wg0, docker0, vboxnet0, … */
+const VIRTUAL_DEVICE =
+  /^(utun|ipsec|tun|tap|wg|tailscale|zt|docker|br-|veth|virbr|vboxnet|vmnet|lxcbr|lxdbr|cni|flannel|podman|awdl|llw|anpi|vethernet)/i
+
+/** Whether `iface` reaches a virtual machine, a container or a VPN rather than a line of its own.
+ * Those start switched off: a VPN with a way to the internet would otherwise carry Steam's
+ * downloads too, slowly. */
+export function isVirtual(
+  iface: Pick<NetworkInterfaceInfo, 'device' | 'displayName' | 'description'>
+): boolean {
+  return (
+    VIRTUAL_DESCRIPTION.test(`${iface.description ?? ''} ${iface.displayName}`) ||
+    VIRTUAL_DEVICE.test(iface.device)
+  )
+}
+
 /** The name to show for `iface` until someone gives it one of their own. */
 export function friendlyName(iface: NetworkInterfaceInfo): string {
+  // A WSL or Hyper-V switch says it's Ethernet; its own name ("vEthernet (WSL)") says more.
+  if (iface.virtual || isVirtual(iface)) return iface.displayName
   const text = `${iface.description ?? ''} ${iface.displayName}`
   if (IPHONE.test(text)) return 'iPhone (USB)'
   if (ANDROID.test(text)) return 'Phone (USB tethering)'

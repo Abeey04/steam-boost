@@ -13,8 +13,8 @@ export function allowTestSeams(): void {
 const KINDS = new Set<NetworkInterfaceKind>(['wifi', 'usb', 'ethernet', 'other'])
 
 /** `STEAM_BOOST_TEST_NETWORKS=fibre=127.0.0.2=wifi,phone=127.0.0.3=usb`: these networks in place
- * of the OS's, each a local address it connects from. Read on every call, so a test can change
- * it while the app runs. */
+ * of the OS's, each a local address it connects from (`vpn=127.0.0.4=other=virtual` for a
+ * virtual one). Read on every call, so a test can change it while the app runs. */
 export function testInterfaces(): NetworkInterfaceInfo[] | null {
   if (!allowed) return null
   const raw = process.env['STEAM_BOOST_TEST_NETWORKS']
@@ -23,14 +23,15 @@ export function testInterfaces(): NetworkInterfaceInfo[] | null {
     .split(',')
     .filter(Boolean)
     .map((entry) => {
-      const [id, address, kind] = entry.split('=')
+      const [id, address, kind, virtual] = entry.split('=')
       return {
         id,
         // Loopback test addresses all live on lo (SO_BINDTODEVICE needs a real device on Linux).
         device: address.startsWith('127.') ? 'lo' : id,
         displayName: id,
         addresses: [{ address, family: isIP(address) === 6 ? 6 : 4 }],
-        kind: KINDS.has(kind as NetworkInterfaceKind) ? (kind as NetworkInterfaceKind) : 'ethernet'
+        kind: KINDS.has(kind as NetworkInterfaceKind) ? (kind as NetworkInterfaceKind) : 'ethernet',
+        ...(virtual === 'virtual' ? { virtual: true } : {})
       }
     })
 }

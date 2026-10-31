@@ -2,8 +2,8 @@ import type { UpdateInfo } from '../shared/boost'
 import { PROJECT } from '../shared/project'
 
 // Whether a newer release is out, from GitHub's latest release (drafts and pre-releases aren't
-// "latest"). It only tells: the window offers the download page. An app that installs its own
-// updates needs code signing on macOS first.
+// "latest"). This only tells: the window offers the download page. On Windows the app can also
+// install it itself (autoUpdate.ts); an app that does that on macOS needs code signing first.
 
 function parts(version: string): number[] {
   return version
@@ -40,6 +40,7 @@ export async function checkForUpdate(
     url:
       typeof release.html_url === 'string' && release.html_url.startsWith(PROJECT.github)
         ? release.html_url
-        : `${PROJECT.github}/releases/latest`
+        : `${PROJECT.github}/releases/latest`,
+    install: null
   }
 }

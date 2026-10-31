@@ -76,7 +76,7 @@ function isPrivateV4(address: string): boolean {
 
 /** The networks to suggest: every one with a default route, else every one but bridges. */
 async function suggested(all: NetworkInterfaceInfo[]): Promise<NetworkInterfaceInfo[]> {
-  const routed = await defaultRouteInterfaces()
+  const routed = await defaultRouteInterfaces(all)
   const candidates = all.filter((iface) => iface.kind !== 'bridge')
   if (!routed || routed.size === 0) return candidates
   return candidates.filter((iface) => routed.has(iface.id))

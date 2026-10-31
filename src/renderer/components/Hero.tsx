@@ -1,6 +1,14 @@
-import { averageSpeeds, colorStyle, type Sample } from '../api'
-import { formatBytes, formatSpeed, phaseOf, speedText, type Phase, type SpeedUnit } from '../format'
-import type { AppState } from '../types'
+import { averageSpeeds, colorStyle, useGameArt, type Sample } from '../api'
+import {
+  formatBytes,
+  formatDuration,
+  formatSpeed,
+  phaseOf,
+  speedText,
+  type Phase,
+  type SpeedUnit
+} from '../format'
+import type { AppState, GameDownload } from '../types'
 import { SpeedChart } from './SpeedChart'
 
 const TONE: Record<Phase, 'off' | 'wait' | 'good' | 'bad'> = {
@@ -16,6 +24,47 @@ const TONE: Record<Phase, 'off' | 'wait' | 'good' | 'bad'> = {
 
 /** Seconds of speeds the shares and the gain are averaged over, so they don't jump every second. */
 const STEADY_SECONDS = 5
+
+/** The game Steam is downloading: its art, how far along it is, the time left at today's speed,
+ * and the time the boost has saved on it. */
+function Game({
+  download,
+  speed
+}: {
+  download: GameDownload
+  /** Bytes a second, steadied. */
+  speed: number
+}): React.JSX.Element {
+  const art = useGameArt(download.appId)
+  const { downloadedBytes: done, totalBytes: total } = download
+  const fraction = total > 0 ? Math.min(1, done / total) : null
+  const left = total > done && speed > 0 ? (total - done) / speed : null
+  return (
+    <div className="game">
+      {art ? (
+        <img className="game-art" src={art} alt="" />
+      ) : (
+        <span className="game-art" aria-hidden />
+      )}
+      <div className="game-main">
+        <div className="game-head">
+          <span className="game-name">{download.name}</span>
+          {fraction !== null && <span className="game-percent">{Math.floor(fraction * 100)}%</span>}
+        </div>
+        {fraction !== null && (
+          <div className="game-progress" aria-hidden>
+            <span style={{ width: `${fraction * 100}%` }} />
+          </div>
+        )}
+        <div className="game-meta">
+          {total > 0 ? `${formatBytes(done)} of ${formatBytes(total)}` : 'Downloading'}
+          {left !== null && ` · ${formatDuration(left)} left`}
+          {download.savedSeconds >= 60 && ` · ${formatDuration(download.savedSeconds)} saved`}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 /** Where things stand, the combined speed and what the other connections add, the last minute by
  * connection, and each one's share. */
@@ -61,7 +110,7 @@ export function Hero({
   // What the others carry on top of the fastest connection's own speed.
   const gain =
     fastest && parts.length > 1 ? Math.round(((total - fastest.speed) / fastest.speed) * 100) : 0
-  const { sessionBytes, requests } = state.boost
+  const { sessionBytes, requests, download, savedSecondsTotal } = state.boost
 
   // Only where things stand is announced as it changes: the speed, chart and shares below it
   // change every second, and a screen reader would read them out every second too.
@@ -79,6 +128,7 @@ export function Hero({
           </span>
         )}
       </div>
+      {enabled && download && <Game download={download} speed={total} />}
       <button
         type="button"
         className="speed"
@@ -117,10 +167,21 @@ export function Hero({
           ))
         )}
       </div>
-      {sessionBytes > 0 && (
+      {(sessionBytes > 0 || savedSecondsTotal >= 60) && (
         <div className="hero-foot">
-          {formatBytes(sessionBytes)} carried since it started · {requests.done.toLocaleString()}{' '}
-          pieces{requests.failed > 0 ? ` · ${requests.failed} failed` : ''}
+          {/* A piece that failed went to another connection: retried, not lost. */}
+          {sessionBytes > 0 && (
+            <div>
+              {formatBytes(sessionBytes)} carried since it started ·{' '}
+              {requests.done.toLocaleString()} pieces
+              {requests.failed > 0 ? ` · ${requests.failed} retried` : ''}
+            </div>
+          )}
+          {savedSecondsTotal >= 60 && (
+            <div className="hero-saved">
+              {formatDuration(savedSecondsTotal)} saved in all, every download counted
+            </div>
+          )}
         </div>
       )}
     </section>

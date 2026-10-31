@@ -11,25 +11,34 @@ files:
   - '!out/{test,cli}/**'
   - '!{.editorconfig,.gitattributes,.prettierrc.yaml,.prettierignore,CHANGELOG.md,README.md,electron-builder.yml}'
   - '!tsconfig*.json'
-  # koffi ships prebuilds for every OS, and is only loaded on Linux (network/deviceBinding.ts).
+  # koffi ships prebuilds for every OS, and is only loaded on Linux (network/deviceBinding.ts): a
+  # Linux package keeps its x64 and Arm64 builds, the others none (${os} is linux, mac or win, and
+  # every folder is named for its OS: linux_x64, win32_x64, darwin_arm64, …). A platform's own
+  # `files` would replace this list rather than add to it, so it's all here.
   - '!node_modules/koffi/{src,vendor,doc}/**'
   - '!node_modules/koffi/build/koffi/!(linux_x64|linux_arm64)/**'
+  - '!node_modules/koffi/build/koffi/!(${os})_*/**'
 win:
   executableName: steam-boost
   target:
     - target: nsis
       arch: [x64, arm64]
 nsis:
-  # No file name carries the version, so the website links to the latest release's files by name
-  # (releases/latest/download/steam-boost-setup.exe, see docs/index.html). No ${arch} here: one
-  # installer holds both, and docs/site.js reads a name without one as that.
-  artifactName: ${name}-setup.${ext}
+  # One installer per architecture, half the size of one holding both. No file name carries the
+  # version, so the website links to the latest release's files by name (releases/latest/download/
+  # steam-boost-setup-arm64.exe); the Release workflow also uploads the x64 one as
+  # steam-boost-setup.exe, the name earlier releases used. The updater picks the installer for
+  # its architecture from latest.yml by the ${arch} in the name.
+  artifactName: ${name}-setup-${arch}.${ext}
+  buildUniversalInstaller: false
   # Assisted rather than one-click, so people can choose where it goes.
   oneClick: false
   allowToChangeInstallationDirectory: true
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
+  # Uninstalling takes the hosts-file line out (build/installer.nsh).
+  include: build/installer.nsh
 mac:
   category: public.app-category.utilities
   target:
@@ -51,6 +60,16 @@ appImage:
 deb:
   artifactName: ${name}_${arch}.${ext}
 npmRebuild: false
+# Electron's fuses, set in the binary as it's packaged: the app can't be made a plain Node.js
+# runtime (ELECTRON_RUN_AS_NODE, NODE_OPTIONS, --inspect), and runs only its own app.asar, checked
+# against the hash built into the executable. The app never forks, so nothing here needs those.
+electronFuses:
+  runAsNode: false
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
+  enableCookieEncryption: true
 # Builds never publish themselves (--publish never): .github/workflows/release.yml uploads them to a
 # draft GitHub Release.
 publish:

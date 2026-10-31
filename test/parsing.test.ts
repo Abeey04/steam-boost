@@ -27,6 +27,19 @@ import {
   TRIGGER_HOST
 } from '../src/main/steam/steamHosts'
 import { readServerName } from '../src/main/steam/tlsSni'
+import {
+  parseNetstatDefaults,
+  parseProcNetRoute,
+  parseRoutePrint
+} from '../src/main/steam/defaultRoutes'
+import { currentDownload, libraryPaths, parseAppManifest, parseVdf } from '../src/main/steam/games'
+import {
+  describePortOwner,
+  parseLsof,
+  parseSs,
+  parseWindowsOwner,
+  type PortOwner
+} from '../src/main/steam/portOwner'
 import { DataCaps, flag, parseArgs, parseCaps, parseSize } from '../src/cli/args'
 
 // --- Which requests are forwarded -----------------------------------------------------------
@@ -331,4 +344,189 @@ test('a network is held to its cap once, counting every byte it carried', () => 
   assert.equal(caps.isCapped('wifi'), false)
   assert.equal(caps.usedBy('wifi'), 1000)
   assert.equal(caps.capOf('wifi'), undefined)
+})
+
+// --- Which networks reach the internet ------------------------------------------------------
+
+test("Windows' default routes are read from route print, in any language", () => {
+  const english = [
+    'IPv4 Route Table',
+    '===========================================================================',
+    'Active Routes:',
+    'Network Destination        Netmask          Gateway       Interface  Metric',
+    '          0.0.0.0          0.0.0.0      192.168.1.1      192.168.1.4     40',
+    '          0.0.0.0          0.0.0.0   192.168.42.129   192.168.42.17     25',
+    '        127.0.0.0        255.0.0.0         On-link         127.0.0.1    331',
+    '      192.168.1.0    255.255.255.0         On-link       192.168.1.4    296',
+    '===========================================================================',
+    'Persistent Routes:',
+    '  Network Address          Netmask  Gateway Address  Metric',
+    '          0.0.0.0          0.0.0.0         10.0.0.1  Default',
+    ''
+  ].join('\r\n')
+  assert.deepEqual(parseRoutePrint(english), ['192.168.1.4', '192.168.42.17'])
+  // A VPN's default route goes out "on-link"; the headers are in German here.
+  const german = [
+    'Aktive Routen:',
+    '     Netzwerkziel    Netzwerkmaske          Gateway    Schnittstelle Metrik',
+    '          0.0.0.0          0.0.0.0          Auf Verbindung       10.8.0.2     35',
+    '          0.0.0.0          0.0.0.0          On-link       10.8.0.6     35'
+  ].join('\r\n')
+  assert.deepEqual(parseRoutePrint(german), ['10.8.0.6'])
+})
+
+test('Linux and macOS default routes are read from the kernel and netstat', () => {
+  const procNetRoute = [
+    'Iface\tDestination\tGateway \tFlags\tRefCnt\tUse\tMetric\tMask\t\tMTU\tWindow\tIRTT',
+    'wlp2s0\t00000000\t0101A8C0\t0003\t0\t0\t600\t00000000\t0\t0\t0',
+    'wlp2s0\t0001A8C0\t00000000\t0001\t0\t0\t600\t00FFFFFF\t0\t0\t0',
+    'usb0\t00000000\t812AA8C0\t0003\t0\t0\t100\t00000000\t0\t0\t0'
+  ].join('\n')
+  assert.deepEqual(parseProcNetRoute(procNetRoute), ['wlp2s0', 'usb0'])
+  const netstat = [
+    'Routing tables',
+    '',
+    'Internet:',
+    'Destination        Gateway            Flags               Netif Expire',
+    'default            192.168.1.1        UGScg                 en0',
+    'default            172.20.10.1        UGScIg                en7',
+    '127                127.0.0.1          UCS                   lo0'
+  ].join('\n')
+  assert.deepEqual(parseNetstatDefaults(netstat), ['en0', 'en7'])
+})
+
+// --- Steam's own files: the game being downloaded --------------------------------------------
+
+test("Steam's library list is read, old layout and new, each folder once", () => {
+  const current = parseVdf(
+    [
+      '"libraryfolders"',
+      '{',
+      '\t"0"',
+      '\t{',
+      '\t\t"path"\t\t"C:\\\\Program Files (x86)\\\\Steam"',
+      '\t\t"apps"',
+      '\t\t{',
+      '\t\t\t"228980"\t\t"25674515"',
+      '\t\t}',
+      '\t}',
+      '\t"1"',
+      '\t{',
+      '\t\t"path"\t\t"D:\\\\SteamLibrary"',
+      '\t}',
+      '}'
+    ].join('\n')
+  )
+  assert.deepEqual(libraryPaths(current, 'c:/program files (x86)/steam'), [
+    'c:/program files (x86)/steam',
+    'D:\\SteamLibrary'
+  ])
+  const older = parseVdf(
+    '"LibraryFolders"\n{\n\t"TimeNextStatsReport"\t\t"1700000000"\n\t"1"\t\t"E:\\\\Games\\\\Steam"\n}\n'
+  )
+  assert.deepEqual(libraryPaths(older, '/home/me/.steam/steam'), [
+    '/home/me/.steam/steam',
+    'E:\\Games\\Steam'
+  ])
+})
+
+test("a game's manifest gives its name and how much it has to download", () => {
+  const manifest = [
+    '"AppState"',
+    '{',
+    '\t"appid"\t\t"1422450"',
+    '\t"name"\t\t"Deadlock"',
+    '\t"StateFlags"\t\t"1026"',
+    '\t"BytesToDownload"\t\t"32623696"',
+    '\t"BytesDownloaded"\t\t"1048576"',
+    '\t"InstalledDepots"',
+    '\t{',
+    '\t\t"1422451"',
+    '\t\t{',
+    '\t\t\t"manifest"\t\t"7027095991257036524"',
+    '\t\t}',
+    '\t}',
+    '}'
+  ].join('\n')
+  assert.deepEqual(parseAppManifest(manifest), {
+    appId: 1422450,
+    name: 'Deadlock',
+    bytesToDownload: 32623696,
+    bytesDownloaded: 1048576
+  })
+  assert.equal(parseAppManifest('"AppState" { "name" "No id" }'), null)
+})
+
+test("the game being downloaded is the last one Steam's log says is running an update", () => {
+  const log = [
+    '[2026-10-29 03:41:59] Current download rate: 61.456 Mbps',
+    '[2026-10-29 03:42:05] AppID 493520 App update changed : Running Update,Downloading,Staging,Stopping,',
+    '[2026-10-29 03:42:10] AppID 493520 App update changed : None',
+    '[2026-10-29 03:42:10] AppID 228980 App update changed : Running Update,Preallocating,',
+    '[2026-10-29 03:42:10] AppID 228980 update started : download 0/23045488, store 0/0, reuse 0/0, delta 0/0, stage 0/29759921 ',
+    '[2026-10-29 03:42:10] AppID 228980 App update changed : Running Update,Downloading,Staging,',
+    '[2026-10-29 03:42:10] Downloading 28 chunks for depot 228986 (8782296191957114623)'
+  ]
+  assert.deepEqual(currentDownload(log.join('\n')), {
+    appId: 228980,
+    startedBytes: 0,
+    totalBytes: 23045488
+  })
+  // Between downloading and committing it's still running an update.
+  const committing = [
+    ...log,
+    '[2026-10-29 03:42:21] AppID 228980 App update changed : Running Update,Committing,'
+  ]
+  assert.equal(currentDownload(committing.join('\r\n'))?.appId, 228980)
+  // Done, paused or stopped: nothing.
+  const done = [...committing, '[2026-10-29 03:42:21] AppID 228980 App update changed : None']
+  assert.equal(currentDownload(done.join('\n')), null)
+  assert.equal(currentDownload(''), null)
+})
+
+// --- A program on port 80 ----------------------------------------------------------------------
+
+test('the program on a port is read from what each OS says, and named with what to do', () => {
+  assert.deepEqual(
+    parseWindowsOwner(
+      '\uFEFF{"pid":4,"process":null,"service":"W3SVC","serviceName":"World Wide Web Publishing Service"}'
+    ),
+    { pid: 4, process: null, service: 'W3SVC', serviceName: 'World Wide Web Publishing Service' }
+  )
+  assert.equal(parseWindowsOwner('  \r\n'), null)
+  assert.deepEqual(parseLsof('p812\ncnginx\n'), {
+    pid: 812,
+    process: 'nginx',
+    service: null,
+    serviceName: null
+  })
+  assert.equal(parseLsof(''), null)
+  assert.deepEqual(
+    parseSs(
+      'LISTEN 0 511 0.0.0.0:80 0.0.0.0:* users:(("apache2",pid=1200,fd=4),("apache2",pid=1201,fd=4))'
+    ),
+    { pid: 1200, process: 'apache2', service: null, serviceName: null }
+  )
+  assert.equal(parseSs('LISTEN 0 511 0.0.0.0:80 0.0.0.0:*'), null)
+
+  const owner: PortOwner = { pid: null, process: null, service: null, serviceName: null }
+  const said = (parts: Partial<PortOwner>): string => describePortOwner({ ...owner, ...parts }, 80)
+  assert.match(
+    said({ pid: 4, service: 'W3SVC', serviceName: 'World Wide Web Publishing Service' }),
+    /^IIS \(World Wide Web Publishing Service\) is using port 80, the one port Steam looks for a cache on\. Stop it in Services/
+  )
+  assert.match(
+    said({ pid: 4 }),
+    /^A program registered with Windows' HTTP service .*"netsh http show servicestate"/
+  )
+  assert.match(said({ pid: 3021, process: 'httpd' }), /^Apache \(httpd\) is using port 80/)
+  assert.match(said({ pid: 77, process: 'Skype' }), /^Skype is using port 80/)
+  assert.match(
+    said({ pid: 1176, process: 'svchost', service: 'Foo', serviceName: 'Foo Service' }),
+    /^Foo Service \(a Windows service\)/
+  )
+  assert.match(
+    said({ pid: 9001, process: 'node' }),
+    /^node \(process 9001\) is using port 80\. *|^node \(process 9001\) is using port 80, /
+  )
 })

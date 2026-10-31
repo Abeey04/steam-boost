@@ -35,6 +35,15 @@ export function formatBytes(bytes: number): string {
   return `${bytes} B`
 }
 
+/** A span of time as people say it: "under a minute", "12 min", "1 h 5 min". */
+export function formatDuration(seconds: number): string {
+  const minutes = Math.round(seconds / 60)
+  if (minutes < 1) return 'under a minute'
+  if (minutes < 60) return `${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  return minutes % 60 === 0 ? `${hours} h` : `${hours} h ${minutes % 60} min`
+}
+
 export function secondsAgo(time: number, now = Date.now()): string {
   const seconds = Math.max(0, Math.round((now - time) / 1000))
   if (seconds < 60) return `${seconds} s ago`
