@@ -553,14 +553,23 @@
           <div class="downloads">
             <div class="dl-main">
               <h3>Windows 10 and 11</h3>
-              <p>One installer for x64 and Arm PCs.</p>
+              <p id="windows-note">
+                For most PCs. A Windows on Arm PC, with a Snapdragon chip say, has
+                <a
+                  id="windows-other"
+                  data-asset="windows-arm64"
+                  href="https://github.com/Abeey04/steam-boost/releases/latest/download/steam-boost-setup-arm64.exe"
+                  >its own installer</a
+                >.
+              </p>
               <a
                 class="btn btn-primary btn-large"
+                id="windows-download"
                 data-asset="windows"
                 href="https://github.com/Abeey04/steam-boost/releases/latest/download/steam-boost-setup.exe"
                 >Download the installer</a
               >
-              <span class="dl-size" data-size-of="windows"></span>
+              <span class="dl-size" id="windows-size" data-size-of="windows"></span>
             </div>
             <ul class="dl-list">
               <li>
@@ -638,6 +647,17 @@
               is on <a href="https://github.com/Abeey04/steam-boost">GitHub</a> if you'd rather
               build it yourself.
             </p>
+            <details class="checksums" id="checksums" hidden>
+              <summary>SHA-256 checksums for version <span id="checksums-version"></span></summary>
+              <dl id="checksums-list"></dl>
+              <p>
+                To check a download on Windows, run
+                <code>certutil -hashfile steam-boost-setup.exe SHA256</code> where you saved it and
+                compare, or check that GitHub built it with
+                <code>gh attestation verify steam-boost-setup.exe -R Abeey04/steam-boost</code>.
+                VirusTotal shows what dozens of virus scanners make of each file.
+              </p>
+            </details>
           </div>
         </div>
       </section>

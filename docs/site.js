@@ -1,14 +1,16 @@
 // Steam Boost's website (this folder, served by GitHub Pages): download links for the latest
-// release with its version and sizes, the right button for the visitor's computer (on a phone, a
-// way to send the page on to one), and the speed-up calculator.
+// release with its version, sizes and checksums, the right button for the visitor's computer (on
+// a phone, a way to send the page on to one), and the speed-up calculator.
 
 const REPO = 'Abeey04/steam-boost'
 const RELEASES = `https://github.com/${REPO}/releases/latest`
 
 /** Each download link's file in the latest release. Release files carry no version in their names
- * (electron-builder.yml), so these work with no script at all: index.html has them as they are. */
+ * (electron-builder.yml), so these work with no script at all: index.html has them as they are.
+ * steam-boost-setup.exe is the x64 installer, as it has been since there's been one for Arm. */
 const DIRECT = {
   windows: `${RELEASES}/download/steam-boost-setup.exe`,
+  'windows-arm64': `${RELEASES}/download/steam-boost-setup-arm64.exe`,
   'mac-arm64': `${RELEASES}/download/steam-boost-arm64.dmg`,
   'mac-x64': `${RELEASES}/download/steam-boost-x64.dmg`,
   appimage: `${RELEASES}/download/steam-boost-x86_64.AppImage`,
@@ -20,6 +22,7 @@ const DIRECT = {
  * another way (v0.1.0's carry their version). */
 const MATCHERS = {
   windows: (name) => /setup\.exe$/i.test(name),
+  'windows-arm64': (name) => /setup-arm64\.exe$/i.test(name),
   'mac-arm64': (name) => /\.dmg$/i.test(name) && /arm64/i.test(name),
   'mac-x64': (name) => /\.dmg$/i.test(name) && /(x64|x86_64|intel)/i.test(name),
   appimage: (name) => /\.appimage$/i.test(name),
@@ -80,8 +83,37 @@ function offerToSend(link, note) {
   }
 }
 
+/** Whether this is a Windows on Arm PC, where the browser says (Chromium browsers do, when asked;
+ * the others get the x64 installer, which most Windows PCs want and Windows 11 on Arm can run). */
+async function onArm() {
+  try {
+    const { architecture } = await navigator.userAgentData.getHighEntropyValues(['architecture'])
+    return architecture === 'arm'
+  } catch {
+    return false
+  }
+}
+
+/** On a Windows on Arm PC, the Windows card's big button is its installer, and the link beside it
+ * the x64 one. */
+function preferArmInstaller() {
+  const main = document.getElementById('windows-download')
+  const other = document.getElementById('windows-other')
+  const note = document.getElementById('windows-note')
+  const size = document.getElementById('windows-size')
+  if (!main || !other || !note) return
+  main.dataset.asset = 'windows-arm64'
+  main.href = DIRECT['windows-arm64']
+  main.textContent = 'Download the installer for Arm'
+  other.dataset.asset = 'windows'
+  other.href = DIRECT.windows
+  other.textContent = 'the x64 installer'
+  note.replaceChildren('For Windows on Arm, as this PC is. Most other PCs want ', other, '.')
+  if (size) size.dataset.sizeOf = 'windows-arm64'
+}
+
 /** The main button: the download for the visitor's computer, or on a phone a way to send it on. */
-function primaryButton() {
+async function primaryButton() {
   const link = document.getElementById('primary-download')
   if (!link) return
   const note = document.getElementById('release-note')
@@ -90,8 +122,12 @@ function primaryButton() {
     return
   }
   const platform = visitorPlatform()
+  const arm = platform === 'windows' && (await onArm())
+  if (arm) preferArmInstaller()
   const [asset, label] = {
-    windows: ['windows', 'Download for Windows'],
+    windows: arm
+      ? ['windows-arm64', 'Download for Windows on Arm']
+      : ['windows', 'Download for Windows'],
     // Apple silicon is most Macs now; Intel is one click away below.
     mac: ['mac-arm64', 'Download for macOS'],
     linux: ['appimage', 'Download for Linux']
@@ -103,6 +139,37 @@ function primaryButton() {
     note.textContent =
       'Free and open source. The macOS and Linux builds are experimental: Steam Boost is made for Windows 10 and 11 first.'
   }
+}
+
+/** Each file's SHA-256 from the release, for anyone checking a download before they run it, with
+ * a link to what VirusTotal's scanners make of it. Shown only once GitHub has said. */
+function showChecksums(release, version) {
+  const details = document.getElementById('checksums')
+  const list = document.getElementById('checksums-list')
+  if (!details || !list) return
+  const files = (release.assets ?? []).filter(
+    (asset) =>
+      /\.(exe|dmg|appimage|deb|mjs)$/i.test(asset.name) &&
+      /^sha256:[0-9a-f]{64}$/i.test(asset.digest ?? '')
+  )
+  if (files.length === 0) return
+  list.replaceChildren()
+  for (const asset of files) {
+    const hash = asset.digest.slice('sha256:'.length).toLowerCase()
+    const name = document.createElement('dt')
+    name.textContent = asset.name
+    const value = document.createElement('dd')
+    const code = document.createElement('code')
+    code.textContent = hash
+    const scan = document.createElement('a')
+    scan.href = `https://www.virustotal.com/gui/file/${hash}`
+    scan.textContent = 'VirusTotal'
+    value.append(code, scan)
+    list.append(name, value)
+  }
+  const shown = document.getElementById('checksums-version')
+  if (shown) shown.textContent = version ?? ''
+  details.hidden = false
 }
 
 /** Points every download link at its file in `hrefs`, or the Releases page when it has none. */
@@ -163,6 +230,7 @@ async function loadRelease() {
     const bytes = sizes[element.dataset.sizeOf]
     if (bytes) element.textContent = `${megabytes(bytes)}${version ? `, version ${version}` : ''}`
   }
+  showChecksums(release, version)
   // Under the main button: the version and the size of what it downloads (not on a phone).
   const primary = document.getElementById('primary-download')
   const heroVersion = document.getElementById('hero-version')
@@ -228,6 +296,6 @@ function calculator() {
   update()
 }
 
-primaryButton()
 calculator()
-void loadRelease()
+// The main button first: the release's sizes are for the file it ends up pointing at.
+void primaryButton().then(() => loadRelease())
