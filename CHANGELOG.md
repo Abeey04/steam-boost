@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.2.2
+
+The rest of 0.2: the game and the time saved, an installer for each kind of PC, and updates from
+the window.
+
+- The window names the game Steam is downloading, with its art, how far along it is, the time left
+  and the time the boost has saved on it, and under the chart, the time saved over every download.
+- On Windows, a new version installs from the window: Update fetches it, Restart to update puts it
+  in. That works from this version on.
+- One installer for x64 PCs and one for Arm PCs, each about half the size of the single one before.
+  `steam-boost-setup.exe` is the x64 one.
+- Adapters for virtual machines, containers and VPNs are listed apart, under Other adapters, and
+  stay off unless switched on, so a VPN no longer carries Steam's downloads unasked.
+- When another program has port 80, the window says which (IIS, Apache, Skype, …) and what to do
+  about it, rather than offering a netstat command.
+- Tell us how it went (in Settings, and Feedback at the bottom of the window) opens the Speed
+  reports discussion with a reply on the clipboard, filled in from what the app saw.
+- Set up and Undo setup change the hosts file behind the administrator prompt itself, so a change
+  another program makes there meanwhile isn't lost. Uninstalling takes Steam Boost's line out too.
+- Which connections reach the internet is read from `route print`, rather than from a PowerShell
+  started every 30 seconds.
+- Electron's fuses are set: the app can't be run as a plain Node.js, and only runs its own,
+  checked, files.
+- Under the chart, pieces that failed are counted as retried: each went to another connection.
+
 ## 0.2.1
 
 The same app as 0.2.0, with downloads you can check.

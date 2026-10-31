@@ -93,11 +93,14 @@ workflow built, run `gh attestation verify steam-boost-setup.exe -R Abeey04/stea
   for all traffic. Make Wi-Fi the default again with
   `Set-NetIPInterface -InterfaceAlias "Ethernet 3" -InterfaceMetric 500` (the phone's adapter
   name, as administrator). Steam Boost still uses the phone: it binds to each adapter directly.
-- **Something else.** Settings › **Tell us how it went** (or Feedback, at the bottom of the
-  window) opens a new [issue](https://github.com/Abeey04/steam-boost/issues) with a summary filled
-  in, and puts the diagnostics on the clipboard to paste into it: versions, settings, the
-  hosts-file line, Steam's cache log lines and Steam Boost's log. They name your connections and
-  their local addresses, so look them over first. **Copy diagnostics** copies them alone.
+- **Something else.** Settings › **Copy diagnostics** puts a report on the clipboard (versions,
+  settings, the hosts-file line, Steam's cache log lines, Steam Boost's log): paste it into an
+  [issue](https://github.com/Abeey04/steam-boost/issues). It names your connections and their
+  local addresses, so look it over first.
+
+However it went, Settings › **Tell us how it went** (or Feedback, at the bottom of the window)
+opens [Speed reports](https://github.com/Abeey04/steam-boost/discussions/2) with a reply on the
+clipboard, filled in from what the app saw: your connections, your Windows and the speeds.
 
 ## Building it
 
